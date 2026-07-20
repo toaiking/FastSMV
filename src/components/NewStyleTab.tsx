@@ -59,10 +59,10 @@ export default function NewStyleTab({
   const [styleCode, setStyleCode] = useState('');
   const [styleName, setStyleName] = useState('');
   const [customer, setCustomer] = useState('');
-  const [patternPerimeterCm, setPatternPerimeterCm] = useState<number>(500);
+  const [patternPerimeterCm, setPatternPerimeterCm] = useState<number | ''>(0);
   const [baseSmvMethod, setBaseSmvMethod] = useState<'manual' | 'auto'>('auto');
-  const [perimeterSmvRate, setPerimeterSmvRate] = useState<number>(0.005);
-  const [manualBaseSmv, setManualBaseSmv] = useState<number>(3.5);
+  const [perimeterSmvRate, setPerimeterSmvRate] = useState<number | ''>(0.005);
+  const [manualBaseSmv, setManualBaseSmv] = useState<number | ''>(3.5);
   const [estimator, setEstimator] = useState('');
   const [notes, setNotes] = useState('');
   const [patternImage, setPatternImage] = useState<string>('');
@@ -129,7 +129,7 @@ export default function NewStyleTab({
       setStyleCode('');
       setStyleName('');
       setCustomer('');
-      setPatternPerimeterCm(500);
+      setPatternPerimeterCm(0);
       setBaseSmvMethod('auto');
       setPerimeterSmvRate(0.005);
       setManualBaseSmv(3.5);
@@ -160,9 +160,13 @@ export default function NewStyleTab({
   // Live recalculate whenever inputs change
   useEffect(() => {
     // 1. Calculate Base SMV
+    const perimeter = patternPerimeterCm === '' ? 0 : patternPerimeterCm;
+    const rate = perimeterSmvRate === '' ? 0 : perimeterSmvRate;
+    const manualBase = manualBaseSmv === '' ? 0 : manualBaseSmv;
+
     const baseSmv = baseSmvMethod === 'auto' 
-      ? Number((patternPerimeterCm * perimeterSmvRate).toFixed(3))
-      : Number(manualBaseSmv);
+      ? Number((perimeter * rate).toFixed(3))
+      : Number(manualBase);
 
     // 2. Fetch coefficient values
     const prodType = library.coefficients.find(c => c.id === selectedProductTypeId) || productTypes[0];
@@ -174,7 +178,7 @@ export default function NewStyleTab({
     const perimeterTier = library.perimeterTiers.find(tier => {
       const min = tier.minCm;
       const max = tier.maxCm === null ? Infinity : tier.maxCm;
-      return patternPerimeterCm >= min && patternPerimeterCm <= max;
+      return perimeter >= min && perimeter <= max;
     }) || library.perimeterTiers[library.perimeterTiers.length - 1]; // fallback
 
     const pTypeVal = prodType ? prodType.value : 1.0;
@@ -351,7 +355,7 @@ export default function NewStyleTab({
       setStyleCode('');
       setStyleName('');
       setCustomer('');
-      setPatternPerimeterCm(500);
+      setPatternPerimeterCm(0);
       setBaseSmvMethod('auto');
       setPerimeterSmvRate(0.005);
       setManualBaseSmv(3.5);
@@ -380,6 +384,18 @@ export default function NewStyleTab({
       setErrorMsg('Vui lòng nhập tên Người ước lượng.');
       return;
     }
+    if (baseSmvMethod === 'auto' && (patternPerimeterCm === '' || patternPerimeterCm <= 0)) {
+      setErrorMsg('Vui lòng nhập Tổng chu vi rập mẫu hợp lệ.');
+      return;
+    }
+    if (baseSmvMethod === 'auto' && (perimeterSmvRate === '' || perimeterSmvRate <= 0)) {
+      setErrorMsg('Vui lòng nhập Định mức nền (phút/cm chu vi) hợp lệ.');
+      return;
+    }
+    if (baseSmvMethod === 'manual' && (manualBaseSmv === '' || manualBaseSmv < 0)) {
+      setErrorMsg('Vui lòng nhập Base SMV thủ công hợp lệ.');
+      return;
+    }
     if (!activeCalculation) {
       setErrorMsg('Lỗi tính toán SMV.');
       return;
@@ -390,9 +406,9 @@ export default function NewStyleTab({
       styleCode: styleCode.trim(),
       styleName: styleName.trim(),
       customer: customer.trim(),
-      patternPerimeterCm,
+      patternPerimeterCm: Number(patternPerimeterCm) || 0,
       baseSmvMethod,
-      perimeterSmvRate,
+      perimeterSmvRate: Number(perimeterSmvRate) || 0,
       baseSmv: activeCalculation.baseSmv,
       productTypeId: selectedProductTypeId,
       complexityId: selectedComplexityId,
@@ -436,7 +452,7 @@ export default function NewStyleTab({
           setStyleCode('');
           setStyleName('');
           setCustomer('');
-          setPatternPerimeterCm(500);
+          setPatternPerimeterCm(0);
           setNotes('');
           setPatternImage('');
         }
@@ -476,7 +492,7 @@ export default function NewStyleTab({
         setStyleCode('');
         setStyleName('');
         setCustomer('');
-        setPatternPerimeterCm(500);
+        setPatternPerimeterCm(0);
         setNotes('');
         setPatternImage('');
       }
@@ -778,7 +794,7 @@ export default function NewStyleTab({
               <div className="flex items-center gap-1.5">
                 <button
                   type="button"
-                  onClick={() => setPatternPerimeterCm(prev => Math.max(10, prev - 50))}
+                  onClick={() => setPatternPerimeterCm(prev => Math.max(0, (prev === '' ? 0 : prev) - 50))}
                   className="w-11 h-11 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-800 rounded-lg flex items-center justify-center font-black select-none cursor-pointer border border-gray-200 shadow-xs"
                 >
                   <Minus className="w-4 h-4" />
@@ -786,10 +802,18 @@ export default function NewStyleTab({
                 <input
                   id="pattern-perimeter"
                   type="number"
-                  min="10"
+                  min="0"
                   required
                   value={patternPerimeterCm}
-                  onChange={e => setPatternPerimeterCm(Math.max(10, parseFloat(e.target.value) || 10))}
+                  onChange={e => {
+                    const val = e.target.value;
+                    if (val === '') {
+                      setPatternPerimeterCm('');
+                    } else {
+                      const parsed = parseFloat(val);
+                      setPatternPerimeterCm(isNaN(parsed) ? '' : Math.max(0, parsed));
+                    }
+                  }}
                   className={`flex-1 h-11 text-center font-black text-base rounded-lg transition-all ${
                     isDark 
                       ? 'bg-slate-700 border-slate-600 text-white' 
@@ -798,7 +822,7 @@ export default function NewStyleTab({
                 />
                 <button
                   type="button"
-                  onClick={() => setPatternPerimeterCm(prev => prev + 50)}
+                  onClick={() => setPatternPerimeterCm(prev => (prev === '' ? 0 : prev) + 50)}
                   className="w-11 h-11 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-800 rounded-lg flex items-center justify-center font-black select-none cursor-pointer border border-gray-200 shadow-xs"
                 >
                   <Plus className="w-4 h-4" />
@@ -848,7 +872,7 @@ export default function NewStyleTab({
                 <div className="flex items-center gap-1.5">
                   <button
                     type="button"
-                    onClick={() => setPerimeterSmvRate(prev => Math.max(0.001, Number((prev - 0.001).toFixed(4))))}
+                    onClick={() => setPerimeterSmvRate(prev => Math.max(0.001, Number(((prev === '' ? 0.005 : prev) - 0.001).toFixed(4))))}
                     className="w-10 h-10 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg flex items-center justify-center font-bold border border-gray-200 cursor-pointer"
                   >
                     <Minus className="w-3.5 h-3.5" />
@@ -859,12 +883,20 @@ export default function NewStyleTab({
                     step="0.001"
                     min="0.001"
                     value={perimeterSmvRate}
-                    onChange={e => setPerimeterSmvRate(Math.max(0.001, parseFloat(e.target.value) || 0))}
+                    onChange={e => {
+                      const val = e.target.value;
+                      if (val === '') {
+                        setPerimeterSmvRate('');
+                      } else {
+                        const parsed = parseFloat(val);
+                        setPerimeterSmvRate(isNaN(parsed) ? '' : parsed);
+                      }
+                    }}
                     className="flex-1 h-10 text-center font-bold text-sm bg-white rounded-lg border border-gray-300"
                   />
                   <button
                     type="button"
-                    onClick={() => setPerimeterSmvRate(prev => Number((prev + 0.001).toFixed(4)))}
+                    onClick={() => setPerimeterSmvRate(prev => Number(((prev === '' ? 0.005 : prev) + 0.001).toFixed(4)))}
                     className="w-10 h-10 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg flex items-center justify-center font-bold border border-gray-200 cursor-pointer"
                   >
                     <Plus className="w-3.5 h-3.5" />
@@ -879,7 +911,7 @@ export default function NewStyleTab({
                 <div className="flex items-center gap-1.5">
                   <button
                     type="button"
-                    onClick={() => setManualBaseSmv(prev => Math.max(0, Number((prev - 0.5).toFixed(2))))}
+                    onClick={() => setManualBaseSmv(prev => Math.max(0, Number(((prev === '' ? 3.5 : prev) - 0.5).toFixed(2))))}
                     className="w-10 h-10 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg flex items-center justify-center font-bold border border-gray-200 cursor-pointer"
                   >
                     <Minus className="w-3.5 h-3.5" />
@@ -890,7 +922,15 @@ export default function NewStyleTab({
                     step="0.1"
                     min="0"
                     value={manualBaseSmv}
-                    onChange={e => setManualBaseSmv(Math.max(0, parseFloat(e.target.value) || 0))}
+                    onChange={e => {
+                      const val = e.target.value;
+                      if (val === '') {
+                        setManualBaseSmv('');
+                      } else {
+                        const parsed = parseFloat(val);
+                        setManualBaseSmv(isNaN(parsed) ? '' : parsed);
+                      }
+                    }}
                     className="flex-1 h-10 text-center font-black text-sm bg-white rounded-lg border border-gray-300"
                   />
                   <button
