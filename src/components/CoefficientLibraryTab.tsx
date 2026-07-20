@@ -3,6 +3,7 @@ import { CoefficientLibrary, Coefficient, PerimeterTier, CoefficientCategory, Co
 import { 
   Plus, Trash2, Save, Undo, Archive, CheckCircle, AlertCircle, FileJson, ArrowDownToLine, RefreshCw, Layers, Upload
 } from 'lucide-react';
+import { useLanguage } from '../lib/LanguageContext';
 
 interface CoefficientLibraryTabProps {
   library: CoefficientLibrary;
@@ -23,6 +24,8 @@ export default function CoefficientLibraryTab({
   isDark = false,
   isLocalStorageMode = false
 }: CoefficientLibraryTabProps) {
+  const { t } = useLanguage();
+  
   // Local editable copy of the library
   const [localCoefficients, setLocalCoefficients] = useState<Coefficient[]>([]);
   const [localPerimeterTiers, setLocalPerimeterTiers] = useState<PerimeterTier[]>([]);
@@ -77,7 +80,7 @@ export default function CoefficientLibraryTab({
 
   // Revert changes
   const handleDiscardChanges = () => {
-    if (confirm('Bạn có chắc chắn muốn hủy bỏ toàn bộ chỉnh sửa chưa lưu?')) {
+    if (confirm(t('Bạn có chắc chắn muốn hủy bỏ toàn bộ chỉnh sửa chưa lưu?'))) {
       setLocalCoefficients(JSON.parse(JSON.stringify(library.coefficients)));
       setLocalPerimeterTiers(JSON.parse(JSON.stringify(library.perimeterTiers || [])));
       setHasChanges(false);
@@ -102,9 +105,9 @@ export default function CoefficientLibraryTab({
     const newItem: Coefficient = {
       id: `coef-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
       category,
-      name: 'Hệ số mới',
+      name: t('Hệ số mới'),
       value: 1.0,
-      description: 'Nhập mô tả hệ số này...'
+      description: t('Nhập mô tả hệ số này...')
     };
     setLocalCoefficients(prev => [...prev, newItem]);
     markChanged();
@@ -112,7 +115,7 @@ export default function CoefficientLibraryTab({
 
   // COEFFICIENTS: Delete a row
   const handleDeleteCoefficient = (id: string) => {
-    if (confirm('Xóa hệ số này? Mẫu cũ sử dụng ID này vẫn giữ nguyên thông tin gốc, nhưng không thể chọn mới hệ số này.')) {
+    if (confirm(t('Xóa hệ số này? Mẫu cũ sử dụng ID này vẫn giữ nguyên thông tin gốc, nhưng không thể chọn mới hệ số này.'))) {
       setLocalCoefficients(prev => prev.filter(c => c.id !== id));
       markChanged();
     }
@@ -151,7 +154,7 @@ export default function CoefficientLibraryTab({
       minCm: isFinite(nextMin) && nextMin > 1 ? nextMin : 4501,
       maxCm: null,
       multiplier: 1.0,
-      description: `Bậc chu vi rập (${isFinite(nextMin) && nextMin > 1 ? nextMin : 4501} cm trở lên)`
+      description: `${t("Bậc chu vi rập")} (${isFinite(nextMin) && nextMin > 1 ? nextMin : 4501} ${t("cm trở lên")})`
     };
 
     setLocalPerimeterTiers(prev => [...prev, newTier]);
@@ -160,7 +163,7 @@ export default function CoefficientLibraryTab({
 
   // PERIMETER TIERS: Delete a tier
   const handleDeletePerimeterTier = (id: string) => {
-    if (confirm('Xóa bậc chu vi rập này?')) {
+    if (confirm(t('Xóa bậc chu vi rập này?'))) {
       setLocalPerimeterTiers(prev => prev.filter(t => t.id !== id));
       markChanged();
     }
@@ -171,18 +174,18 @@ export default function CoefficientLibraryTab({
     // Validate inputs
     const emptyNames = localCoefficients.some(c => !c.name.trim());
     if (emptyNames) {
-      alert('Tên hệ số không được để trống.');
+      alert(t('Tên hệ số không được để trống.'));
       return;
     }
 
     const invalidValues = localCoefficients.some(c => c.value <= 0);
     if (invalidValues) {
-      alert('Giá trị hệ số phải lớn hơn 0.');
+      alert(t('Giá trị hệ số phải lớn hơn 0.'));
       return;
     }
 
-    setChangeDescription(`Cập nhật thư viện hệ số: điều chỉnh các thông số trong tab ${
-      subTab === 'tiers' ? 'Bậc chu vi rập' : 'Hệ số nhóm'
+    setChangeDescription(`${t("Cập nhật thư viện hệ số: điều chỉnh các thông số trong tab")} ${
+      subTab === 'tiers' ? t('Bậc chu vi rập') : t('Hệ số nhóm')
     }`);
     setSaveError('');
     setSaveSuccess('');
@@ -219,13 +222,13 @@ export default function CoefficientLibraryTab({
           versionBefore: library.version,
           versionAfter: nextVersion,
           action: 'Cập nhật hệ số',
-          details: changeDescription.trim() || `Cập nhật thư viện hệ số (Lưu trên thiết bị) lên phiên bản ${nextVersion}`
+          details: changeDescription.trim() || `${t("Cập nhật thư viện hệ số (Lưu trên thiết bị) lên phiên bản")} ${nextVersion}`
         };
 
         localHistory.unshift(newHistoryItem);
         localStorage.setItem('smv_history', JSON.stringify(localHistory));
 
-        setSaveSuccess('Cập nhật hệ số thành công (Lưu trên thiết bị)!');
+        setSaveSuccess(t('Cập nhật hệ số thành công (Lưu trên thiết bị)!'));
         setHasChanges(false);
 
         setTimeout(() => {
@@ -234,7 +237,7 @@ export default function CoefficientLibraryTab({
         }, 1000);
 
       } catch (err: any) {
-        setSaveError(err.message || 'Lỗi lưu cục bộ.');
+        setSaveError(err.message || t('Lỗi lưu cục bộ.'));
       } finally {
         setIsSaving(false);
       }
@@ -255,10 +258,10 @@ export default function CoefficientLibraryTab({
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || 'Gặp lỗi khi lưu hệ số.');
+        throw new Error(result.error || t('Gặp lỗi khi lưu hệ số.'));
       }
 
-      setSaveSuccess('Cập nhật hệ số thành công!');
+      setSaveSuccess(t('Cập nhật hệ số thành công!'));
       setHasChanges(false);
       setTimeout(() => {
         setShowSaveModal(false);
@@ -266,7 +269,7 @@ export default function CoefficientLibraryTab({
       }, 1000);
 
     } catch (e: any) {
-      setSaveError(e.message || 'Lỗi kết nối.');
+      setSaveError(e.message || t('Lỗi kết nối.'));
     } finally {
       setIsSaving(false);
     }
@@ -290,9 +293,9 @@ export default function CoefficientLibraryTab({
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
 
-        setBackupMsg(`✅ Đã tải file backup (.json) về thiết bị thành công!`);
+        setBackupMsg(`✅ ${t("Đã tải file backup (.json) về thiết bị thành công!")}`);
       } catch (err: any) {
-        setBackupMsg(`❌ Lỗi tải backup: ${err.message}`);
+        setBackupMsg(`❌ ${t("Lỗi tải backup:")} ${err.message}`);
       } finally {
         setIsBackingUp(false);
       }
@@ -303,13 +306,13 @@ export default function CoefficientLibraryTab({
       const response = await fetch('/api/coefficients/backup', { method: 'POST' });
       const result = await response.json();
       if (response.ok) {
-        setBackupMsg(`✅ Đã tạo file backup thành công: ${result.fileName}`);
+        setBackupMsg(`✅ ${t("Đã tạo file backup thành công:")} ${result.fileName}`);
         fetchBackups();
       } else {
-        setBackupMsg(`❌ Lỗi: ${result.error}`);
+        setBackupMsg(`❌ ${t("Lỗi:")} ${result.error}`);
       }
     } catch (e: any) {
-      setBackupMsg(`❌ Lỗi kết nối: ${e.message}`);
+      setBackupMsg(`❌ ${t("Lỗi kết nối:")} ${e.message}`);
     } finally {
       setIsBackingUp(false);
     }
@@ -326,10 +329,10 @@ export default function CoefficientLibraryTab({
         const parsed = JSON.parse(content) as CoefficientLibrary;
 
         if (!parsed.version || !parsed.coefficients || !parsed.perimeterTiers) {
-          throw new Error('Định dạng file sao lưu không hợp lệ. Phải chứa đầy đủ phiên bản và hằng số.');
+          throw new Error(t('Định dạng file sao lưu không hợp lệ. Phải chứa đầy đủ phiên bản và hằng số.'));
         }
 
-        if (confirm(`Bạn có chắc chắn muốn khôi phục thư viện hệ số về phiên bản v${parsed.version} từ file "${file.name}"? Dữ liệu hiện tại sẽ bị ghi đè hoàn toàn.`)) {
+        if (confirm(`${t("Bạn có chắc chắn muốn khôi phục thư viện hệ số về phiên bản")} v${parsed.version} ${t("từ file")} "${file.name}"? ${t("Dữ liệu hiện tại sẽ bị ghi đè hoàn toàn.")}`)) {
           // Backup current in history
           const localHistoryStr = localStorage.getItem('smv_history') || '[]';
           const localHistory = JSON.parse(localHistoryStr) as CoefficientHistory[];
@@ -339,18 +342,18 @@ export default function CoefficientLibraryTab({
             versionBefore: library.version,
             versionAfter: parsed.version,
             action: 'Khôi phục hệ số',
-            details: `Khôi phục thư viện hệ số về phiên bản ${parsed.version} từ file: ${file.name}`
+            details: `${t("Khôi phục thư viện hệ số về phiên bản")} ${parsed.version} ${t("từ file:")} ${file.name}`
           };
           localHistory.unshift(restoreHistoryItem);
           
           localStorage.setItem('smv_coefficients', JSON.stringify(parsed));
           localStorage.setItem('smv_history', JSON.stringify(localHistory));
 
-          alert(`Khôi phục thư viện hệ số về phiên bản v${parsed.version} thành công!`);
+          alert(`${t("Khôi phục thư viện hệ số về phiên bản")} v${parsed.version} ${t("thành công!")}`);
           onLibraryUpdate();
         }
       } catch (err: any) {
-        alert(`Không thể đọc file sao lưu: ${err.message}`);
+        alert(`${t("Không thể đọc file sao lưu:")} ${err.message}`);
       }
     };
     reader.readAsText(file);
@@ -359,7 +362,7 @@ export default function CoefficientLibraryTab({
   };
 
   const handleRestoreBackup = async (fileName: string) => {
-    if (!confirm(`Bạn có chắc muốn khôi phục về file backup "${fileName}"? Hệ số hiện tại sẽ bị ghi đè và một file backup tự động của hệ số hiện tại sẽ được tạo.`)) {
+    if (!confirm(`${t("Bạn có chắc muốn khôi phục về file backup")} "${fileName}"? ${t("Hệ số hiện tại sẽ bị ghi đè và một file backup tự động của hệ số hiện tại sẽ được tạo.")}`)) {
       return;
     }
 
@@ -373,13 +376,13 @@ export default function CoefficientLibraryTab({
 
       const result = await response.json();
       if (response.ok) {
-        alert(`Khôi phục thành công! Thư viện đã được tải lại về phiên bản v${result.restoredLibrary.version}`);
+        alert(`${t("Khôi phục thành công! Thư viện đã được tải lại về phiên bản")} v${result.restoredLibrary.version}`);
         onLibraryUpdate();
       } else {
-        alert(`Lỗi khôi phục: ${result.error}`);
+        alert(`${t("Lỗi khôi phục:")} ${result.error}`);
       }
     } catch (e: any) {
-      alert(`Lỗi kết nối: ${e.message}`);
+      alert(`${t("Lỗi kết nối:")} ${e.message}`);
     } finally {
       setIsRestoring(null);
     }
@@ -409,10 +412,10 @@ export default function CoefficientLibraryTab({
       {/* Tab Header with version */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-gray-100/30 gap-4">
         <div>
-          <h2 className="text-base font-bold">📚 Thư viện Hệ Số & Bậc Chi Tiết</h2>
+          <h2 className="text-base font-bold">📚 {t("Thư viện Hệ Số & Bậc Chi Tiết")}</h2>
           <p className="text-xs text-gray-400 mt-1">
-            Thiết lập các hằng số điều chỉnh cho công thức ước lượng SMV. Phiên bản hiện tại:{' '}
-            <strong className="text-blue-600 font-mono text-sm bg-blue-50 px-2 py-0.5 rounded-sm">v{library.version}</strong> (Cập nhật lúc:{' '}
+            {t("Thiết lập các hằng số điều chỉnh cho công thức ước lượng SMV. Phiên bản hiện tại:")}{' '}
+            <strong className="text-blue-600 font-mono text-sm bg-blue-50 px-2 py-0.5 rounded-sm">v{library.version}</strong> ({t("Cập nhật lúc:")}{' '}
             <span className="font-mono text-[11px]">{formatDate(library.updatedAt)}</span>)
           </p>
         </div>
@@ -420,21 +423,21 @@ export default function CoefficientLibraryTab({
         {/* Change detected alert banner */}
         {hasChanges && (
           <div className="flex items-center gap-3 bg-amber-500/10 border border-amber-500/20 px-3.5 py-1.5 rounded-xl text-amber-500 text-xs font-semibold animate-pulse">
-            <span className="block text-amber-600 font-bold">Có thay đổi chưa lưu!</span>
+            <span className="block text-amber-600 font-bold">{t("Có thay đổi chưa lưu!")}</span>
             <div className="flex gap-1.5">
               <button
                 type="button"
                 onClick={handleDiscardChanges}
                 className="px-2.5 py-1 text-gray-500 hover:text-gray-900 bg-white hover:bg-gray-50 rounded-lg border border-gray-200 transition-colors cursor-pointer"
               >
-                Hủy bỏ
+                {t("Hủy bỏ")}
               </button>
               <button
                 type="button"
                 onClick={handleTriggerSave}
                 className="px-2.5 py-1 text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-colors flex items-center gap-1 cursor-pointer font-bold"
               >
-                <Save className="w-3 h-3" /> Lưu
+                <Save className="w-3 h-3" /> {t("Lưu")}
               </button>
             </div>
           </div>
@@ -449,7 +452,7 @@ export default function CoefficientLibraryTab({
             subTab === 'product_type' ? 'border-blue-500 text-blue-500' : 'border-transparent text-gray-400 hover:text-gray-200'
           }`}
         >
-          👕 Loại sản phẩm
+          👕 {t("Loại sản phẩm")}
         </button>
         <button
           onClick={() => setSubTab('complexity')}
@@ -457,7 +460,7 @@ export default function CoefficientLibraryTab({
             subTab === 'complexity' ? 'border-blue-500 text-blue-500' : 'border-transparent text-gray-400 hover:text-gray-200'
           }`}
         >
-          ⚙️ Độ phức tạp
+          ⚙️ {t("Độ phức tạp")}
         </button>
         <button
           onClick={() => setSubTab('experience')}
@@ -465,7 +468,7 @@ export default function CoefficientLibraryTab({
             subTab === 'experience' ? 'border-blue-500 text-blue-500' : 'border-transparent text-gray-400 hover:text-gray-200'
           }`}
         >
-          👤 Kinh nghiệm
+          👤 {t("Kinh nghiệm")}
         </button>
         <button
           onClick={() => setSubTab('allowance')}
@@ -481,7 +484,7 @@ export default function CoefficientLibraryTab({
             subTab === 'tiers' ? 'border-blue-500 text-blue-500' : 'border-transparent text-gray-400 hover:text-gray-200'
           }`}
         >
-          🔢 Bậc rập
+          🔢 {t("Bậc rập")}
         </button>
         <button
           onClick={() => setSubTab('backups')}
@@ -489,7 +492,7 @@ export default function CoefficientLibraryTab({
             subTab === 'backups' ? 'border-blue-500 text-blue-500' : 'border-transparent text-gray-400 hover:text-gray-200'
           }`}
         >
-          💽 Sao lưu
+          💽 {t("Sao lưu")}
         </button>
       </div>
 
@@ -498,14 +501,14 @@ export default function CoefficientLibraryTab({
         <div className="flex flex-col gap-4">
           <div className="flex justify-between items-center">
             <span className="text-xs text-gray-400">
-              Nhập giá trị hệ số nhân trực tiếp.
+              {t("Nhập giá trị hệ số nhân trực tiếp.")}
             </span>
             <button
               type="button"
               onClick={() => handleAddCoefficient(subTab)}
               className="px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-xs font-bold flex items-center gap-1 cursor-pointer transition-all active:scale-95"
             >
-              <Plus className="w-4 h-4" /> Thêm mới
+              <Plus className="w-4 h-4" /> {t("Thêm mới")}
             </button>
           </div>
 
@@ -513,10 +516,10 @@ export default function CoefficientLibraryTab({
             <table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className={`border-b text-gray-400 font-mono ${isDark ? 'bg-slate-900/60 border-slate-700/60' : 'bg-gray-50 border-gray-150'}`}>
-                  <th className="p-3 w-1/3">Tên hệ số / Cấp độ</th>
-                  <th className="p-3 w-1/4 text-right">Giá trị hệ số nhân</th>
-                  <th className="p-3">Diễn giải ý nghĩa</th>
-                  <th className="p-3 text-center w-16">Xoá</th>
+                  <th className="p-3 w-1/3">{t("Tên hệ số / Cấp độ")}</th>
+                  <th className="p-3 w-1/4 text-right">{t("Giá trị hệ số nhân")}</th>
+                  <th className="p-3">{t("Diễn giải ý nghĩa")}</th>
+                  <th className="p-3 text-center w-16">{t("Xoá")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100/20">
@@ -565,7 +568,7 @@ export default function CoefficientLibraryTab({
                             ? 'bg-slate-700/60 border-slate-600/60 text-slate-300' 
                             : 'bg-white border-gray-200 text-gray-500'
                         }`}
-                        placeholder="Thêm mô tả về hệ số..."
+                        placeholder={t("Thêm mô tả về hệ số...")}
                       />
                     </td>
                     <td className="p-2.5 text-center">
@@ -591,14 +594,14 @@ export default function CoefficientLibraryTab({
           <div className="flex justify-between items-center">
             <span className="text-xs text-gray-400 flex items-center gap-1">
               <Layers className="w-4 h-4 text-gray-400" />
-              Tách hệ số theo tổng chu vi rập mẫu (cm).
+              {t("Tách hệ số theo tổng chu vi rập mẫu (cm).")}
             </span>
             <button
               type="button"
               onClick={handleAddPerimeterTier}
               className="px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-xs font-bold flex items-center gap-1 cursor-pointer transition-all active:scale-95"
             >
-              <Plus className="w-4 h-4" /> Thêm bậc rập
+              <Plus className="w-4 h-4" /> {t("Thêm bậc rập")}
             </button>
           </div>
 
@@ -606,11 +609,11 @@ export default function CoefficientLibraryTab({
             <table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className={`border-b text-gray-400 font-mono ${isDark ? 'bg-slate-900/60 border-slate-700/60' : 'bg-gray-50 border-gray-150'}`}>
-                  <th className="p-3 w-1/4">Chu vi từ (cm) (Min)</th>
-                  <th className="p-3 w-1/4">Chu vi đến (cm) (Max)</th>
-                  <th className="p-3 w-1/5 text-right">Hệ số nhân</th>
-                  <th className="p-3">Mô tả / Diễn giải</th>
-                  <th className="p-3 text-center w-16">Xoá</th>
+                  <th className="p-3 w-1/4">{t("Chu vi từ (cm) (Min)")}</th>
+                  <th className="p-3 w-1/4">{t("Chu vi đến (cm) (Max)")}</th>
+                  <th className="p-3 w-1/5 text-right">{t("Hệ số nhân")}</th>
+                  <th className="p-3">{t("Mô tả / Diễn giải")}</th>
+                  <th className="p-3 text-center w-16">{t("Xoá")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100/20 font-mono">
@@ -631,7 +634,7 @@ export default function CoefficientLibraryTab({
                       <input
                         type="number"
                         min="0"
-                        placeholder="Vô hạn"
+                        placeholder={t("Vô hạn")}
                         value={tier.maxCm === null ? '' : tier.maxCm}
                         onChange={e => handleEditPerimeterTier(tier.id, 'maxCm', e.target.value === '' ? null : e.target.value)}
                         className={`w-full px-2 py-1.5 rounded-lg border text-center font-bold text-gray-700 ${
@@ -664,7 +667,7 @@ export default function CoefficientLibraryTab({
                         className={`w-full px-2 py-1.5 rounded-lg border text-xs ${
                           isDark ? 'bg-slate-700/60 border-slate-600/60 text-slate-300' : 'bg-white border-gray-200 text-gray-500'
                         }`}
-                        placeholder="VD: Rập siêu nhỏ..."
+                        placeholder={t("VD: Rập siêu nhỏ...")}
                       />
                     </td>
                     <td className="p-2.5 text-center">
@@ -694,10 +697,10 @@ export default function CoefficientLibraryTab({
               }`}>
                 <div>
                   <h3 className="text-xs font-bold flex items-center gap-1.5">
-                    <Archive className="w-4 h-4 text-blue-500" /> Tải file Sao lưu (.json)
+                    <Archive className="w-4 h-4 text-blue-500" /> {t("Tải file Sao lưu (.json)")}
                   </h3>
                   <p className="text-[11px] text-gray-400 mt-1">
-                    Tải về máy tính một bản sao lưu cứng (.json) chứa toàn bộ cấu hình hệ số hiện tại của bạn.
+                    {t("Tải về máy tính một bản sao lưu cứng (.json) chứa toàn bộ cấu hình hệ số hiện tại của bạn.")}
                   </p>
                 </div>
                 <button
@@ -706,7 +709,7 @@ export default function CoefficientLibraryTab({
                   className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-500 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm active:scale-95 transition-all cursor-pointer whitespace-nowrap"
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${isBackingUp ? 'animate-spin' : ''}`} />
-                  {isBackingUp ? 'Đang tạo...' : '💽 Tải xuống Sao lưu (.json)'}
+                  {isBackingUp ? t('Đang tạo...') : t('💽 Tải xuống Sao lưu (.json)')}
                 </button>
               </div>
 
@@ -715,15 +718,15 @@ export default function CoefficientLibraryTab({
               }`}>
                 <div>
                   <h3 className="text-xs font-bold flex items-center gap-1.5">
-                    <Upload className="w-4 h-4 text-emerald-500" /> Khôi phục từ File (.json)
+                    <Upload className="w-4 h-4 text-emerald-500" /> {t("Khôi phục từ File (.json)")}
                   </h3>
                   <p className="text-[11px] text-gray-400 mt-1">
-                    Chọn file sao lưu `.json` đã tải trước đó từ thiết bị của bạn để khôi phục cấu hình hệ số.
+                    {t("Chọn file sao lưu .json đã tải trước đó từ thiết bị của bạn để khôi phục cấu hình hệ số.")}
                   </p>
                 </div>
                 <label className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm active:scale-95 transition-all cursor-pointer whitespace-nowrap">
                   <Upload className="w-3.5 h-3.5" />
-                  <span>Nạp file Sao lưu</span>
+                  <span>{t("Nạp file Sao lưu")}</span>
                   <input
                     type="file"
                     accept=".json"
@@ -739,10 +742,10 @@ export default function CoefficientLibraryTab({
             }`}>
               <div>
                 <h3 className="text-xs font-bold flex items-center gap-1.5">
-                  <Archive className="w-4 h-4 text-blue-500" /> Sao lưu thủ công tức thì
+                  <Archive className="w-4 h-4 text-blue-500" /> {t("Sao lưu thủ công tức thì")}
                 </h3>
                 <p className="text-[11px] text-gray-400 mt-1">
-                  Tạo một bản sao lưu an toàn của thư viện hệ số hiện tại trên server.
+                  {t("Tạo một bản sao lưu an toàn của thư viện hệ số hiện tại trên server.")}
                 </p>
               </div>
               <button
@@ -751,7 +754,7 @@ export default function CoefficientLibraryTab({
                 className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-500 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm active:scale-95 transition-all cursor-pointer"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${isBackingUp ? 'animate-spin' : ''}`} />
-                {isBackingUp ? 'Đang tạo backup...' : '💽 Sao lưu rập mẫu'}
+                {isBackingUp ? t('Đang tạo backup...') : t('💽 Sao lưu rập mẫu')}
               </button>
             </div>
           )}
@@ -766,23 +769,23 @@ export default function CoefficientLibraryTab({
 
           {/* Backups List Table */}
           <div className="flex flex-col gap-2">
-            <h4 className="text-[10px] font-mono uppercase text-gray-400 tracking-wider">Danh sách file sao lưu cứng (.json)</h4>
+            <h4 className="text-[10px] font-mono uppercase text-gray-400 tracking-wider">{t("Danh sách file sao lưu cứng (.json)")}</h4>
             
             <div className="overflow-x-auto border border-gray-100/30 rounded-xl">
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
                   <tr className={`border-b text-gray-400 font-mono ${isDark ? 'bg-slate-900/60 border-slate-700/60' : 'bg-gray-50 border-gray-150'}`}>
-                    <th className="p-3">Tên File Backup (.json)</th>
-                    <th className="p-3">Ngày tạo sao lưu</th>
-                    <th className="p-3 text-right">Kích thước file</th>
-                    <th className="p-3 text-center w-36">Thao tác</th>
+                    <th className="p-3">{t("Tên File Backup (.json)")}</th>
+                    <th className="p-3">{t("Ngày tạo sao lưu")}</th>
+                    <th className="p-3 text-right">{t("Kích thước file")}</th>
+                    <th className="p-3 text-center w-36">{t("Thao tác")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100/20 font-mono">
                   {backups.length === 0 ? (
                     <tr>
                       <td colSpan={4} className="p-8 text-center text-gray-400 font-sans italic">
-                        Chưa tìm thấy bản sao lưu nào. Hãy bấm nút sao lưu để tạo bản đầu tiên.
+                        {t("Chưa tìm thấy bản sao lưu nào. Hãy bấm nút sao lưu để tạo bản đầu tiên.")}
                       </td>
                     </tr>
                   ) : (
@@ -806,7 +809,7 @@ export default function CoefficientLibraryTab({
                             className="px-2.5 py-1.5 bg-blue-500/10 hover:bg-blue-500 text-blue-500 hover:text-white rounded-lg text-xs font-sans font-bold transition-all flex items-center gap-1 mx-auto cursor-pointer"
                           >
                             <ArrowDownToLine className="w-3.5 h-3.5" />
-                            {isRestoring === backup.fileName ? 'Đang nạp...' : 'Nạp'}
+                            {isRestoring === backup.fileName ? t('Đang nạp...') : t('Nạp')}
                           </button>
                         </td>
                       </tr>
@@ -826,7 +829,7 @@ export default function CoefficientLibraryTab({
             onClick={handleTriggerSave}
             className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white text-xs font-black rounded-xl shadow-md shadow-blue-500/15 transition-all flex items-center gap-2 cursor-pointer active:scale-95"
           >
-            <Save className="w-4 h-4" /> Lưu thay đổi hệ số
+            <Save className="w-4 h-4" /> {t("Lưu thay đổi hệ số")}
           </button>
         </div>
       )}
@@ -837,15 +840,15 @@ export default function CoefficientLibraryTab({
           <div className={`rounded-2xl max-w-lg w-full p-5 shadow-2xl border animate-in fade-in zoom-in duration-200 ${
             isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-gray-100'
           }`}>
-            <h3 className="text-base font-bold mb-1">📝 Nhật ký thay đổi hệ số</h3>
+            <h3 className="text-base font-bold mb-1">📝 {t("Nhật ký thay đổi hệ số")}</h3>
             <p className="text-[11px] text-gray-400 mb-4 leading-relaxed">
-              Nhập lý do hoặc chi tiết thay đổi để lưu vào nhật ký hệ thống (ví dụ: "Cập nhật hệ số Áo Jeans để bù đắp tay nghề công nhân yếu").
+              {t("Nhập lý do hoặc chi tiết thay đổi để lưu vào nhật ký hệ thống (ví dụ: \"Cập nhật hệ số Áo Jeans để bù đắp tay nghề công nhân yếu\").")}
             </p>
 
             <textarea
               rows={3}
               required
-              placeholder="Nhập lý do thay đổi..."
+              placeholder={t("Nhập lý do thay đổi...")}
               value={changeDescription}
               onChange={e => setChangeDescription(e.target.value)}
               className={`w-full px-3 py-2.5 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500 mb-4 ${
@@ -874,7 +877,7 @@ export default function CoefficientLibraryTab({
                 onClick={() => setShowSaveModal(false)}
                 className="px-4 py-2 text-xs font-bold text-gray-400 hover:text-gray-200 bg-transparent rounded-lg transition-colors cursor-pointer"
               >
-                Hủy
+                {t("Hủy")}
               </button>
               <button
                 type="button"
@@ -882,7 +885,7 @@ export default function CoefficientLibraryTab({
                 onClick={handleConfirmSave}
                 className="px-5 py-2.5 text-xs font-black text-white bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 rounded-lg shadow-sm transition-all flex items-center gap-1 cursor-pointer"
               >
-                {isSaving ? 'Đang lưu...' : '✓ Xác nhận & Lưu'}
+                {isSaving ? t('Đang lưu...') : `✓ ${t("Xác nhận & Lưu")}`}
               </button>
             </div>
           </div>

@@ -5,6 +5,7 @@ import {
   Camera, Mic, MicOff, Plus, Minus, RefreshCw, X, Sliders, Check, Upload, Sparkles, HelpCircle, Shirt
 } from 'lucide-react';
 import { exportSingleStyleToExcel } from './ExcelExporter';
+import { useLanguage } from '../lib/LanguageContext';
 
 interface NewStyleTabProps {
   library: CoefficientLibrary;
@@ -55,6 +56,7 @@ export default function NewStyleTab({
   isDark = false,
   isLocalStorageMode = false
 }: NewStyleTabProps) {
+  const { t } = useLanguage();
   // Form States
   const [styleCode, setStyleCode] = useState('');
   const [styleName, setStyleName] = useState('');
@@ -237,7 +239,7 @@ export default function NewStyleTab({
 
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      alert("Trình duyệt hoặc khung hiển thị hiện tại chưa hỗ trợ API Nhận dạng giọng nói (Voice Speech-to-Text). Bạn vui lòng nhập trực tiếp trên bàn phím.");
+      alert(t("Trình duyệt hoặc khung hiển thị hiện tại chưa hỗ trợ API Nhận dạng giọng nói (Voice Speech-to-Text). Bạn vui lòng nhập trực tiếp trên bàn phím."));
       return;
     }
 
@@ -329,7 +331,7 @@ export default function NewStyleTab({
   const handleSelectMockPattern = (mock: typeof MOCK_PATTERNS[number]) => {
     setPatternPerimeterCm(mock.perimeter);
     setPatternImage(mock.image);
-    setNotes(prev => `[Nhập từ mẫu Pattern Rập] ${mock.name}. ${mock.description}\n` + prev);
+    setNotes(prev => `[${t("Nhập từ mẫu Pattern Rập")}] ${t(mock.name)}. ${t(mock.description)}\n` + prev);
     
     // Auto find closest match for Product Type
     const match = productTypes.find(pt => pt.name.toLowerCase().includes(mock.productTypeKeyword.toLowerCase()));
@@ -351,7 +353,7 @@ export default function NewStyleTab({
 
   // Reset form action
   const handleReset = () => {
-    if (confirm('Bạn có chắc chắn muốn xoá hết thông tin đang nhập để làm lại?')) {
+    if (confirm(t('Bạn có chắc chắn muốn xoá hết thông tin đang nhập để làm lại?'))) {
       setStyleCode('');
       setStyleName('');
       setCustomer('');
@@ -373,31 +375,31 @@ export default function NewStyleTab({
     setSuccessMsg('');
 
     if (!styleCode.trim()) {
-      setErrorMsg('Mã hàng không được để trống.');
+      setErrorMsg(t('Mã hàng không được để trống.'));
       return;
     }
     if (!styleName.trim()) {
-      setErrorMsg('Tên Style không được để trống.');
+      setErrorMsg(t('Tên Style không được để trống.'));
       return;
     }
     if (!estimator.trim()) {
-      setErrorMsg('Vui lòng nhập tên Người ước lượng.');
+      setErrorMsg(t('Vui lòng nhập tên Người ước lượng.'));
       return;
     }
     if (baseSmvMethod === 'auto' && (patternPerimeterCm === '' || patternPerimeterCm <= 0)) {
-      setErrorMsg('Vui lòng nhập Tổng chu vi rập mẫu hợp lệ.');
+      setErrorMsg(t('Vui lòng nhập Tổng chu vi rập mẫu hợp lệ.'));
       return;
     }
     if (baseSmvMethod === 'auto' && (perimeterSmvRate === '' || perimeterSmvRate <= 0)) {
-      setErrorMsg('Vui lòng nhập Định mức nền (phút/cm chu vi) hợp lệ.');
+      setErrorMsg(t('Vui lòng nhập Định mức nền (phút/cm chu vi) hợp lệ.'));
       return;
     }
     if (baseSmvMethod === 'manual' && (manualBaseSmv === '' || manualBaseSmv < 0)) {
-      setErrorMsg('Vui lòng nhập Base SMV thủ công hợp lệ.');
+      setErrorMsg(t('Vui lòng nhập Base SMV thủ công hợp lệ.'));
       return;
     }
     if (!activeCalculation) {
-      setErrorMsg('Lỗi tính toán SMV.');
+      setErrorMsg(t('Lỗi tính toán SMV.'));
       return;
     }
 
@@ -440,13 +442,13 @@ export default function NewStyleTab({
           // Check if style code already exists
           const existing = localStyles.some(s => s.styleCode.toLowerCase() === payload.styleCode.toLowerCase());
           if (existing) {
-            throw new Error(`Mã hàng "${payload.styleCode}" đã tồn tại trong danh sách.`);
+            throw new Error(`${t('Mã hàng')} "${payload.styleCode}" ${t('đã tồn tại trong danh sách.')}`);
           }
           localStyles.unshift(payload);
         }
 
         localStorage.setItem('smv_styles', JSON.stringify(localStyles));
-        setSuccessMsg(editingStyle ? 'Cập nhật Style thành công (Lưu trên thiết bị)!' : 'Lưu Style mới thành công (Lưu trên thiết bị)!');
+        setSuccessMsg(editingStyle ? t('Cập nhật Style thành công (Lưu trên thiết bị)!') : t('Lưu Style mới thành công (Lưu trên thiết bị)!'));
 
         if (!editingStyle) {
           setStyleCode('');
@@ -462,7 +464,7 @@ export default function NewStyleTab({
         }, 1000);
 
       } catch (err: any) {
-        setErrorMsg(err.message || 'Lỗi khi lưu Style.');
+        setErrorMsg(err.message || t('Lỗi khi lưu Style.'));
       } finally {
         setIsSaving(false);
       }
@@ -482,10 +484,10 @@ export default function NewStyleTab({
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || 'Có lỗi xảy ra khi lưu Style.');
+        throw new Error(result.error || t('Có lỗi xảy ra khi lưu Style.'));
       }
 
-      setSuccessMsg(editingStyle ? 'Cập nhật Style thành công!' : 'Lưu Style mới thành công!');
+      setSuccessMsg(editingStyle ? t('Cập nhật Style thành công!') : t('Lưu Style mới thành công!'));
       
       // If saving new, clear fields
       if (!editingStyle) {
@@ -502,7 +504,7 @@ export default function NewStyleTab({
       }, 1000);
 
     } catch (err: any) {
-      setErrorMsg(err.message || 'Lỗi kết nối máy chủ.');
+      setErrorMsg(err.message || t('Lỗi kết nối máy chủ.'));
     } finally {
       setIsSaving(false);
     }
@@ -551,7 +553,7 @@ export default function NewStyleTab({
               <Sparkles className="w-4 h-4" />
             </span>
             <h2 className={`text-sm font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              {editingStyle ? 'Sửa thông tin Style' : 'Ước lượng Style mới'}
+              {editingStyle ? t('Sửa thông tin Style') : t('Ước lượng Style mới')}
             </h2>
           </div>
           {editingStyle && (
@@ -560,26 +562,26 @@ export default function NewStyleTab({
               onClick={onCancelEdit}
               className="text-xs text-red-500 hover:text-red-700 bg-red-50 px-2.5 py-1 rounded-md transition-colors font-semibold"
             >
-              Hủy
+              {t("Hủy")}
             </button>
           )}
         </div>
 
         {/* SECTION 1: BASIC INFORMATION */}
         <div className="space-y-3">
-          <span className="text-xs font-bold text-blue-500 uppercase tracking-wider block">1. Thông tin chung</span>
+          <span className="text-xs font-bold text-blue-500 uppercase tracking-wider block">1. {t("Thông tin chung")}</span>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             {/* Style Code */}
             <div>
               <label className="block text-xs font-semibold text-gray-400 mb-1" htmlFor="style-code">
-                Mã hàng <span className="text-red-500">*</span>
+                {t("Mã hàng")} <span className="text-red-500">*</span>
               </label>
               <input
                 id="style-code"
                 type="text"
                 required
-                placeholder="Ví dụ: TS-402, JEANS-99..."
+                placeholder={t("Ví dụ: TS-402, JEANS-99...")}
                 value={styleCode}
                 onChange={e => setStyleCode(e.target.value)}
                 className={`w-full px-3 py-2.5 rounded-lg text-sm font-semibold transition-all ${
@@ -593,12 +595,12 @@ export default function NewStyleTab({
             {/* Customer */}
             <div>
               <label className="block text-xs font-semibold text-gray-400 mb-1" htmlFor="customer">
-                Khách hàng
+                {t("Khách hàng")}
               </label>
               <input
                 id="customer"
                 type="text"
-                placeholder="Ví dụ: Zara, Nike, Uniqlo..."
+                placeholder={t("Ví dụ: Zara, Nike, Uniqlo...")}
                 value={customer}
                 onChange={e => setCustomer(e.target.value)}
                 className={`w-full px-3 py-2.5 rounded-lg text-sm font-semibold transition-all ${
@@ -612,14 +614,14 @@ export default function NewStyleTab({
             {/* Style Name with VOICE microphone */}
             <div className="sm:col-span-2">
               <label className="block text-xs font-semibold text-gray-400 mb-1" htmlFor="style-name">
-                Tên Style hàng <span className="text-red-500">*</span>
+                {t("Tên Style hàng")} <span className="text-red-500">*</span>
               </label>
               <div className="relative flex items-center">
                 <input
                   id="style-name"
                   type="text"
                   required
-                  placeholder="Ví dụ: Áo thun cổ tròn may trần vai..."
+                  placeholder={t("Ví dụ: Áo thun cổ tròn may trần vai...")}
                   value={styleName}
                   onChange={e => setStyleName(e.target.value)}
                   className={`w-full pl-3 pr-10 py-2.5 rounded-lg text-sm font-semibold transition-all ${
@@ -636,7 +638,7 @@ export default function NewStyleTab({
                       ? 'bg-red-500 text-white animate-pulse' 
                       : 'text-gray-400 hover:text-gray-600 hover:bg-gray-200'
                   }`}
-                  title="Nhập tên bằng giọng nói (Tiếng Việt)"
+                  title={t("Nhập tên bằng giọng nói (Tiếng Việt)")}
                 >
                   {isListening === 'styleName' ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
                 </button>
@@ -646,13 +648,13 @@ export default function NewStyleTab({
             {/* Estimator Name */}
             <div className="sm:col-span-2">
               <label className="block text-xs font-semibold text-gray-400 mb-1" htmlFor="estimator">
-                Tên Người ước lượng (IE) <span className="text-red-500">*</span>
+                {t("Tên Người ước lượng (IE)")} <span className="text-red-500">*</span>
               </label>
               <input
                 id="estimator"
                 type="text"
                 required
-                placeholder="Nhập tên của bạn hoặc kỹ sư chịu trách nhiệm..."
+                placeholder={t("Nhập tên của bạn hoặc kỹ sư chịu trách nhiệm...")}
                 value={estimator}
                 onChange={e => handleEstimatorChange(e.target.value)}
                 className={`w-full px-3 py-2.5 rounded-lg text-sm font-semibold transition-all ${
@@ -668,14 +670,14 @@ export default function NewStyleTab({
         {/* SECTION 2: PATTERN & CAMERA CAPTURING MODULE */}
         <div className="space-y-3 pt-4 border-t border-gray-100/50">
           <div className="flex justify-between items-center">
-            <span className="text-xs font-bold text-blue-500 uppercase tracking-wider block">2. Chi tiết Pattern & Camera</span>
+            <span className="text-xs font-bold text-blue-500 uppercase tracking-wider block">2. {t("Chi tiết Pattern & Camera")}</span>
             <button
               type="button"
               onClick={() => setShowPatternPicker(!showPatternPicker)}
               className="text-xs font-bold text-blue-600 hover:underline flex items-center gap-1 bg-blue-50 px-2 py-1 rounded-md"
             >
               <Sparkles className="w-3.5 h-3.5 text-blue-500" />
-              Sử dụng rập mẫu
+              {t("Sử dụng rập mẫu")}
             </button>
           </div>
 
@@ -683,7 +685,7 @@ export default function NewStyleTab({
           {showPatternPicker && (
             <div className="p-3 bg-blue-50/60 rounded-xl border border-blue-100 space-y-3 animate-fadeIn">
               <div className="flex justify-between items-center">
-                <span className="text-xs font-bold text-blue-800">Chọn rập chi tiết có sẵn:</span>
+                <span className="text-xs font-bold text-blue-800">{t("Chọn rập chi tiết có sẵn:")}</span>
                 <button type="button" onClick={() => setShowPatternPicker(false)} className="text-gray-400 hover:text-gray-600">
                   <X className="w-4 h-4" />
                 </button>
@@ -696,7 +698,7 @@ export default function NewStyleTab({
                     onClick={() => handleSelectMockPattern(mock)}
                     className="p-2 bg-white hover:bg-blue-100 border border-blue-200 rounded-lg text-left transition-all active:scale-97 cursor-pointer"
                   >
-                    <span className="text-xs font-bold text-gray-800 block">{mock.name}</span>
+                    <span className="text-xs font-bold text-gray-800 block">{t(mock.name)}</span>
                     <span className="text-[10px] text-blue-700 font-semibold">{mock.perimeter} cm</span>
                   </button>
                 ))}
@@ -710,7 +712,7 @@ export default function NewStyleTab({
               <div>
                 <h4 className="text-xs font-bold text-gray-700 flex items-center gap-1">
                   <Camera className="w-4 h-4 text-blue-500" />
-                  <span>Ảnh tài liệu / Rập mẫu</span>
+                  <span>{t("Ảnh tài liệu / Rập mẫu")}</span>
                 </h4>
               </div>
 
@@ -721,7 +723,7 @@ export default function NewStyleTab({
                     onClick={startCamera}
                     className="px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[11px] font-bold transition-all flex items-center gap-1 active:scale-95 cursor-pointer"
                   >
-                    <Camera className="w-3 h-3" /> Bật Camera
+                    <Camera className="w-3 h-3" /> {t("Bật Camera")}
                   </button>
                 ) : (
                   <button
@@ -729,7 +731,7 @@ export default function NewStyleTab({
                     onClick={stopCamera}
                     className="px-2.5 py-1.5 bg-red-500 text-white rounded-lg text-[11px] font-bold hover:bg-red-600 transition-all flex items-center gap-1 active:scale-95 cursor-pointer"
                   >
-                    <X className="w-3 h-3" /> Tắt
+                    <X className="w-3 h-3" /> {t("Tắt")}
                   </button>
                 )}
               </div>
@@ -741,8 +743,8 @@ export default function NewStyleTab({
                 {!cameraAllowed ? (
                   <div className="absolute inset-0 flex flex-col items-center justify-center p-3 text-center text-gray-400">
                     <AlertCircle className="w-6 h-6 text-yellow-500 mb-1.5 animate-bounce" />
-                    <p className="text-xs font-bold text-white">Chưa cấp quyền Camera</p>
-                    <p className="text-[10px] text-gray-450 mt-1 max-w-xs">Vui lòng cấp quyền truy cập camera trong cài đặt.</p>
+                    <p className="text-xs font-bold text-white">{t("Chưa cấp quyền Camera")}</p>
+                    <p className="text-[10px] text-gray-455 mt-1 max-w-xs">{t("Vui lòng cấp quyền truy cập camera trong cài đặt.")}</p>
                   </div>
                 ) : (
                   <>
@@ -758,7 +760,7 @@ export default function NewStyleTab({
                         onClick={captureFrame}
                         className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-[11px] font-bold rounded-full shadow-md flex items-center gap-1 active:scale-90 transition-all cursor-pointer"
                       >
-                        <Check className="w-3.5 h-3.5" /> Chụp ảnh
+                        <Check className="w-3.5 h-3.5" /> {t("Chụp ảnh")}
                       </button>
                     </div>
                   </>
@@ -778,7 +780,7 @@ export default function NewStyleTab({
                   <X className="w-3 h-3" />
                 </button>
                 <div className="absolute bottom-0 inset-x-0 bg-black/50 text-white text-[8px] text-center font-bold py-0.5">
-                  Đã tải hồ sơ
+                  {t("Đã tải hồ sơ")}
                 </div>
               </div>
             )}
@@ -789,7 +791,7 @@ export default function NewStyleTab({
             {/* Pattern Perimeter input */}
             <div>
               <label className="block text-xs font-semibold text-gray-400 mb-1" htmlFor="pattern-perimeter">
-                Tổng chu vi rập mẫu (cm)
+                {t("Tổng chu vi rập mẫu (cm)")}
               </label>
               <div className="flex items-center gap-1.5">
                 <button
@@ -833,7 +835,7 @@ export default function NewStyleTab({
             {/* Base SMV Method Selection */}
             <div>
               <label className="block text-xs font-semibold text-gray-400 mb-1">
-                Nhập Thời gian gốc (Base SMV)
+                {t("Nhập Thời gian gốc (Base SMV)")}
               </label>
               <div className="grid grid-cols-2 gap-2 h-11">
                 <button
@@ -845,7 +847,7 @@ export default function NewStyleTab({
                       : 'bg-gray-50 border-gray-300 text-gray-500 hover:text-gray-800'
                   }`}
                 >
-                  🤖 Tự động
+                  🤖 {t("Tự động")}
                 </button>
                 <button
                   type="button"
@@ -856,7 +858,7 @@ export default function NewStyleTab({
                       : 'bg-gray-50 border-gray-300 text-gray-500 hover:text-gray-800'
                   }`}
                 >
-                  ✍️ Nhập tay
+                  ✍️ {t("Nhập tay")}
                 </button>
               </div>
             </div>
@@ -867,7 +869,7 @@ export default function NewStyleTab({
             {baseSmvMethod === 'auto' ? (
               <div>
                 <label className="block text-xs font-semibold text-gray-500 mb-1" htmlFor="perimeter-smv-rate">
-                  Định mức nền (phút/cm chu vi)
+                  {t("Định mức nền (phút/cm chu vi)")}
                 </label>
                 <div className="flex items-center gap-1.5">
                   <button
@@ -906,7 +908,7 @@ export default function NewStyleTab({
             ) : (
               <div>
                 <label className="block text-xs font-semibold text-gray-500 mb-1" htmlFor="manual-base-smv">
-                  Base SMV thủ công (phút)
+                  {t("Base SMV thủ công (phút)")}
                 </label>
                 <div className="flex items-center gap-1.5">
                   <button
@@ -947,11 +949,11 @@ export default function NewStyleTab({
             {/* Quick Result Indicator */}
             <div className="flex items-center justify-center bg-blue-50/50 rounded-lg p-2.5 border border-blue-100/50">
               <div className="text-center">
-                <span className="text-[10px] text-gray-400 block font-semibold uppercase">Base SMV Tạm Tính</span>
+                <span className="text-[10px] text-gray-400 block font-semibold uppercase">{t("Base SMV Tạm Tính")}</span>
                 <strong className="text-blue-700 text-lg font-black font-sans">
                   {baseSmvMethod === 'auto' ? (patternPerimeterCm * perimeterSmvRate).toFixed(3) : manualBaseSmv.toFixed(3)}
                 </strong>{' '}
-                <span className="text-blue-600 text-xs font-semibold">phút</span>
+                <span className="text-blue-600 text-xs font-semibold">{t("phút")}</span>
               </div>
             </div>
           </div>
@@ -959,14 +961,14 @@ export default function NewStyleTab({
 
         {/* SECTION 3: COEFFICIENT SELECTION GRID */}
         <div className="space-y-4 pt-4 border-t border-gray-100/50">
-          <span className="text-xs font-bold text-blue-500 uppercase tracking-wider block">3. Hệ số định biên may mặc</span>
+          <span className="text-xs font-bold text-blue-500 uppercase tracking-wider block">3. {t("Hệ số định biên may mặc")}</span>
           
           <div className="grid grid-cols-1 gap-4" id="coefficients-form-groups">
             
             {/* Product Types Cards Option */}
             <div className="space-y-1.5">
               <label className="block text-xs font-semibold text-gray-400" htmlFor="pt-option">
-                👕 Loại sản phẩm (Product Type)
+                👕 {t("Loại sản phẩm (Product Type)")}
               </label>
               <div className="grid grid-cols-2 gap-2" id="pt-option">
                 {productTypes.map(c => (
@@ -980,7 +982,7 @@ export default function NewStyleTab({
                         : 'bg-gray-50 border-gray-200 hover:bg-gray-100 text-gray-700'
                     }`}
                   >
-                    <span className="text-xs font-bold truncate block w-full">{c.name}</span>
+                    <span className="text-xs font-bold truncate block w-full">{t(c.name)}</span>
                     <strong className={`text-sm font-black font-mono block ${selectedProductTypeId === c.id ? 'text-white' : 'text-blue-600'}`}>
                       f={c.value.toFixed(2)}
                     </strong>
@@ -992,7 +994,7 @@ export default function NewStyleTab({
             {/* Complexities Cards Option */}
             <div className="space-y-1.5">
               <label className="block text-xs font-semibold text-gray-400" htmlFor="complex-option">
-                ⚙️ Độ phức tạp đường may (Complexity)
+                ⚙️ {t("Độ phức tạp đường may (Complexity)")}
               </label>
               <div className="grid grid-cols-2 gap-2" id="complex-option">
                 {complexities.map(c => (
@@ -1006,7 +1008,7 @@ export default function NewStyleTab({
                         : 'bg-gray-50 border-gray-200 hover:bg-gray-100 text-gray-700'
                     }`}
                   >
-                    <span className="text-xs font-bold truncate block w-full">{c.name}</span>
+                    <span className="text-xs font-bold truncate block w-full">{t(c.name)}</span>
                     <strong className={`text-sm font-black font-mono block ${selectedComplexityId === c.id ? 'text-white' : 'text-blue-600'}`}>
                       f={c.value.toFixed(2)}
                     </strong>
@@ -1018,7 +1020,7 @@ export default function NewStyleTab({
             {/* Experience Cards Option */}
             <div className="space-y-1.5">
               <label className="block text-xs font-semibold text-gray-400" htmlFor="exp-option">
-                👤 Kinh nghiệm công nhân (Experience)
+                👤 {t("Kinh nghiệm công nhân (Experience)")}
               </label>
               <div className="grid grid-cols-2 gap-2" id="exp-option">
                 {experiences.map(c => (
@@ -1032,7 +1034,7 @@ export default function NewStyleTab({
                         : 'bg-gray-50 border-gray-200 hover:bg-gray-100 text-gray-700'
                     }`}
                   >
-                    <span className="text-xs font-bold truncate block w-full">{c.name}</span>
+                    <span className="text-xs font-bold truncate block w-full">{t(c.name)}</span>
                     <strong className={`text-sm font-black font-mono block ${selectedExperienceId === c.id ? 'text-white' : 'text-blue-600'}`}>
                       f={c.value.toFixed(2)}
                     </strong>
@@ -1044,7 +1046,7 @@ export default function NewStyleTab({
             {/* Allowances Cards Option */}
             <div className="space-y-1.5">
               <label className="block text-xs font-semibold text-gray-400" htmlFor="allow-option">
-                🔋 Hệ số bù hao thao tác (Allowance)
+                🔋 {t("Hệ số bù hao thao tác (Allowance)")}
               </label>
               <div className="grid grid-cols-2 gap-2" id="allow-option">
                 {allowances.map(c => (
@@ -1058,7 +1060,7 @@ export default function NewStyleTab({
                         : 'bg-gray-50 border-gray-200 hover:bg-gray-100 text-gray-700'
                     }`}
                   >
-                    <span className="text-xs font-bold truncate block w-full">{c.name}</span>
+                    <span className="text-xs font-bold truncate block w-full">{t(c.name)}</span>
                     <strong className={`text-sm font-black font-mono block ${selectedAllowanceId === c.id ? 'text-white' : 'text-emerald-600'}`}>
                       +{(c.value * 100).toFixed(0)}%
                     </strong>
@@ -1073,13 +1075,13 @@ export default function NewStyleTab({
         {/* Notes with Voice recognition */}
         <div className="space-y-1.5 pt-4 border-t border-gray-100/50">
           <label className="block text-xs font-semibold text-gray-400" htmlFor="style-notes">
-            Thuyết minh kỹ thuật may
+            {t("Thuyết minh kỹ thuật may")}
           </label>
           <div className="relative">
             <textarea
               id="style-notes"
               rows={3}
-              placeholder="May viền cổ, dập ly, ghi âm giọng nói..."
+              placeholder={t("May viền cổ, dập ly, ghi âm giọng nói...")}
               value={notes}
               onChange={e => setNotes(e.target.value)}
               className={`w-full pl-3 pr-10 py-2.5 rounded-lg text-sm transition-all ${
@@ -1096,7 +1098,7 @@ export default function NewStyleTab({
                   ? 'bg-red-500 text-white animate-pulse' 
                   : 'text-gray-400 hover:text-gray-600 hover:bg-gray-200'
               }`}
-              title="Nhập ghi chú bằng giọng nói"
+              title={t("Nhập ghi chú bằng giọng nói")}
             >
               {isListening === 'notes' ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
             </button>
@@ -1111,7 +1113,7 @@ export default function NewStyleTab({
               onClick={handleReset}
               className="px-4 py-3 text-sm text-gray-600 hover:text-gray-900 border border-gray-300 hover:bg-gray-50 rounded-xl transition-all flex items-center gap-1.5 select-none active:scale-95 cursor-pointer"
             >
-              <RotateCcw className="w-4 h-4" /> Xoá nháp
+              <RotateCcw className="w-4 h-4" /> {t("Xoá nháp")}
             </button>
           )}
           <button
@@ -1120,7 +1122,7 @@ export default function NewStyleTab({
             className="flex-1 sm:flex-initial px-6 py-3.5 text-sm text-white bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 font-bold rounded-xl shadow-md shadow-blue-500/10 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
             <Save className="w-4 h-4" />
-            {isSaving ? 'Đang lưu vào đĩa...' : editingStyle ? 'Lưu thay đổi Style' : '💾 Lưu Style Lập tức'}
+            {isSaving ? t('Đang lưu vào đĩa...') : editingStyle ? t('Lưu thay đổi Style') : `💾 ${t('Lưu Style Lập tức')}`}
           </button>
         </div>
 
@@ -1142,46 +1144,50 @@ export default function NewStyleTab({
       {/* RIGHT: LIVE ESTIMATOR RESULTS (PANEL) */}
       <div className="lg:col-span-5 bg-slate-900 text-white p-5 rounded-2xl shadow-lg border border-slate-800 flex flex-col gap-5 sticky top-24 self-start" id="results-panel">
         <div>
-          <span className="text-slate-400 text-[10px] uppercase tracking-widest font-mono font-semibold">Tóm tắt định biên</span>
-          <h2 className="text-xl font-bold text-blue-400 font-sans tracking-tight">🧮 Diễn giải SMV</h2>
+          <span className="text-slate-400 text-[10px] uppercase tracking-widest font-mono font-semibold">{t("Tóm tắt định biên")}</span>
+          <h2 className="text-xl font-bold text-blue-400 font-sans tracking-tight">🧮 {t("Diễn giải SMV")}</h2>
         </div>
 
         {activeCalculation ? (
           <div className="flex flex-col gap-5" id="calc-display">
             {/* BIG FINAL SMV RESULT */}
             <div className="bg-slate-800/80 p-5 rounded-xl border border-slate-750 text-center flex flex-col items-center">
-              <span className="text-slate-400 text-xs font-bold uppercase font-mono tracking-wider">SMV ĐỊNH BIÊN CUỐI CÙNG</span>
+              <span className="text-slate-400 text-xs font-bold uppercase font-mono tracking-wider">{t("SMV ĐỊNH BIÊN CUỐI CÙNG")}</span>
               <div className="text-5xl font-black text-emerald-400 mt-2 tracking-tight font-sans">
                 {activeCalculation.finalSmv.toFixed(3)}
               </div>
-              <span className="text-slate-300 text-xs font-bold mt-1.5 bg-slate-700 px-2.5 py-0.5 rounded-full">phút / sản phẩm</span>
+              <span className="text-slate-300 text-xs font-bold mt-1.5 bg-slate-700 px-2.5 py-0.5 rounded-full">{t("phút / sản phẩm")}</span>
             </div>
 
             {/* FORMULA MATHEMATICAL REPRESENTATION */}
             <div>
-              <h3 className="text-slate-400 text-xs uppercase font-mono mb-2">Công thức tính toán (IE standard)</h3>
+              <h3 className="text-slate-400 text-xs uppercase font-mono mb-2">{t("Công thức tính toán (IE standard)")}</h3>
               <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-850 text-xs font-mono text-slate-300 overflow-x-auto leading-relaxed">
                 <div className="text-blue-400 font-bold mb-1">SMV = Base_SMV × f_Loại × f_Khó × f_ChuVi × f_Nghề × (1 + % Allowance)</div>
                 <div className="border-t border-slate-800/80 my-2 pt-2 text-xs flex flex-wrap gap-x-1.5 gap-y-1">
                   <span>= <strong className="text-white font-bold">{activeCalculation.baseSmv}</strong></span>
-                  <span>× <strong className="text-yellow-400 font-bold">{activeCalculation.productTypeVal}</strong> (Loại)</span>
-                  <span>× <strong className="text-yellow-400 font-bold">{activeCalculation.complexityVal}</strong> (Khó)</span>
-                  <span>× <strong className="text-yellow-400 font-bold">{activeCalculation.perimeterFactor}</strong> (Chu vi)</span>
-                  <span>× <strong className="text-yellow-400 font-bold">{activeCalculation.experienceVal}</strong> (Nghề)</span>
-                  <span>× <strong className="text-yellow-400 font-bold">{(1 + activeCalculation.allowanceVal).toFixed(2)}</strong> (Bù hao)</span>
+                  <span>× <strong className="text-yellow-400 font-bold">{activeCalculation.productTypeVal}</strong> ({t("Loại")})</span>
+                  <span>× <strong className="text-yellow-400 font-bold">{activeCalculation.complexityVal}</strong> ({t("Khó")})</span>
+                  <span>× <strong className="text-yellow-400 font-bold">{activeCalculation.perimeterFactor}</strong> ({t("Chu vi")})</span>
+                  <span>× <strong className="text-yellow-400 font-bold">{activeCalculation.experienceVal}</strong> ({t("Nghề")})</span>
+                  <span>× <strong className="text-yellow-400 font-bold">{(1 + activeCalculation.allowanceVal).toFixed(2)}</strong> ({t("Bù hao")})</span>
                 </div>
               </div>
             </div>
 
             {/* DETAIL BY ELEMENT TABLE */}
             <div className="flex flex-col gap-2.5">
-              <h3 className="text-slate-400 text-xs uppercase font-mono">Thông số cấu thành</h3>
+              <h3 className="text-slate-400 text-xs uppercase font-mono">{t("Thông số cấu thành")}</h3>
               <div className="space-y-2 text-xs">
                 {/* 1. Base */}
                 <div className="flex justify-between items-center py-1.5 border-b border-slate-800/60">
                   <div>
-                    <span className="text-slate-300 block">Thời gian gốc (Base SMV)</span>
-                    <span className="text-slate-500 text-[10px]">{baseSmvMethod === 'auto' ? `Tổng chu vi (${patternPerimeterCm} cm) × Định mức (${perimeterSmvRate})` : 'Nhập tay thủ công'}</span>
+                    <span className="text-slate-300 block">{t("Thời gian gốc (Base SMV)")}</span>
+                    <span className="text-slate-500 text-[10px]">
+                      {baseSmvMethod === 'auto' 
+                        ? `${t("Tổng chu vi")} (${patternPerimeterCm} cm) × ${t("Định mức")} (${perimeterSmvRate})` 
+                        : t("Nhập tay thủ công")}
+                    </span>
                   </div>
                   <strong className="text-white font-mono">{activeCalculation.baseSmv.toFixed(3)}</strong>
                 </div>
@@ -1189,8 +1195,8 @@ export default function NewStyleTab({
                 {/* 2. Product type */}
                 <div className="flex justify-between items-center py-1.5 border-b border-slate-800/60">
                   <div>
-                    <span className="text-slate-300 block">Loại sản phẩm (Product Type)</span>
-                    <span className="text-slate-500 text-[10px]">{activeCalculation.productTypeName}</span>
+                    <span className="text-slate-300 block">{t("Loại sản phẩm (Product Type)")}</span>
+                    <span className="text-slate-500 text-[10px]">{t(activeCalculation.productTypeName)}</span>
                   </div>
                   <strong className="text-yellow-400 font-mono">×{activeCalculation.productTypeVal.toFixed(2)}</strong>
                 </div>
@@ -1198,8 +1204,8 @@ export default function NewStyleTab({
                 {/* 3. Complexity */}
                 <div className="flex justify-between items-center py-1.5 border-b border-slate-800/60">
                   <div>
-                    <span className="text-slate-300 block">Độ phức tạp (Complexity)</span>
-                    <span className="text-slate-500 text-[10px]">{activeCalculation.complexityName}</span>
+                    <span className="text-slate-300 block">{t("Độ phức tạp (Complexity)")}</span>
+                    <span className="text-slate-500 text-[10px]">{t(activeCalculation.complexityName)}</span>
                   </div>
                   <strong className="text-yellow-400 font-mono">×{activeCalculation.complexityVal.toFixed(2)}</strong>
                 </div>
@@ -1207,8 +1213,8 @@ export default function NewStyleTab({
                 {/* 4. Perimeter Tier */}
                 <div className="flex justify-between items-center py-1.5 border-b border-slate-800/60">
                   <div>
-                    <span className="text-slate-300 block">Hệ số bậc chu vi rập (Perimeter Tier)</span>
-                    <span className="text-slate-500 text-[10px]">{activeCalculation.perimeterTierName}</span>
+                    <span className="text-slate-300 block">{t("Hệ số bậc chu vi rập (Perimeter Tier)")}</span>
+                    <span className="text-slate-500 text-[10px]">{t(activeCalculation.perimeterTierName)}</span>
                   </div>
                   <strong className="text-yellow-400 font-mono">×{activeCalculation.perimeterFactor.toFixed(2)}</strong>
                 </div>
@@ -1216,8 +1222,8 @@ export default function NewStyleTab({
                 {/* 5. Experience */}
                 <div className="flex justify-between items-center py-1.5 border-b border-slate-800/60">
                   <div>
-                    <span className="text-slate-300 block">Kinh nghiệm may (Experience)</span>
-                    <span className="text-slate-500 text-[10px]">{activeCalculation.experienceName}</span>
+                    <span className="text-slate-300 block">{t("Kinh nghiệm may (Experience)")}</span>
+                    <span className="text-slate-500 text-[10px]">{t(activeCalculation.experienceName)}</span>
                   </div>
                   <strong className="text-yellow-400 font-mono">×{activeCalculation.experienceVal.toFixed(2)}</strong>
                 </div>
@@ -1225,8 +1231,8 @@ export default function NewStyleTab({
                 {/* 6. Allowance */}
                 <div className="flex justify-between items-center py-1.5">
                   <div>
-                    <span className="text-slate-300 block">Hệ số bù hao Allowance</span>
-                    <span className="text-slate-500 text-[10px]">{activeCalculation.allowanceName}</span>
+                    <span className="text-slate-300 block">{t("Hệ số bù hao Allowance")}</span>
+                    <span className="text-slate-500 text-[10px]">{t(activeCalculation.allowanceName)}</span>
                   </div>
                   <strong className="text-emerald-400 font-mono">+{(activeCalculation.allowanceVal * 100).toFixed(0)}%</strong>
                 </div>
@@ -1235,19 +1241,19 @@ export default function NewStyleTab({
 
             {/* Quick Export live sheet */}
             <div className="pt-3 border-t border-slate-800 flex justify-between items-center gap-2">
-              <span className="text-slate-500 text-[10px] font-mono">Phiên bản hệ số: v{library.version}</span>
+              <span className="text-slate-500 text-[10px] font-mono">{t("Phiên bản hệ số")}: v{library.version}</span>
               <button
                 type="button"
                 onClick={handleExportLive}
                 className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg text-xs font-bold border border-slate-700 transition-colors flex items-center gap-1 cursor-pointer"
               >
-                <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-500" /> Xuất Excel trực quan
+                <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-500" /> {t("Xuất Excel trực quan")}
               </button>
             </div>
           </div>
         ) : (
           <div className="text-slate-400 text-xs text-center py-10">
-            Đang chờ dữ liệu đầu vào rập mẫu...
+            {t("Đang chờ dữ liệu đầu vào rập mẫu...")}
           </div>
         )}
       </div>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { CoefficientHistory } from '../types';
 import { Calendar, Layers, RefreshCw, GitCommit } from 'lucide-react';
+import { useLanguage } from '../lib/LanguageContext';
 
 interface HistoryTabProps {
   history: CoefficientHistory[];
@@ -8,6 +9,8 @@ interface HistoryTabProps {
 }
 
 export default function HistoryTab({ history, isDark = false }: HistoryTabProps) {
+  const { t } = useLanguage();
+  
   // Format Date Helper
   const formatDate = (isoString: string) => {
     try {
@@ -23,15 +26,15 @@ export default function HistoryTab({ history, isDark = false }: HistoryTabProps)
       isDark ? 'bg-slate-800 border-slate-700/80 text-white' : 'bg-white border-gray-100 shadow-xs'
     }`} id="history-tab-container">
       <div>
-        <h2 className="text-base font-bold">📜 Nhật Ký Thay Đổi Hệ Số</h2>
+        <h2 className="text-base font-bold">📜 {t("Nhật Ký Thay Đổi Hệ Số")}</h2>
         <p className="text-xs text-gray-400 mt-1">
-          Lịch sử cập nhật thư viện hệ số để đối soát và tra cứu số liệu.
+          {t("Lịch sử cập nhật thư viện hệ số để đối soát và tra cứu số liệu.")}
         </p>
       </div>
 
       {history.length === 0 ? (
         <div className="p-12 text-center text-gray-400 italic">
-          Chưa ghi nhận sự kiện thay đổi nào trong hệ thống.
+          {t("Chưa ghi nhận sự kiện thay đổi nào trong hệ thống.")}
         </div>
       ) : (
         <div className={`relative border-l-2 pl-6 ml-3 space-y-8 py-2 ${
@@ -68,7 +71,7 @@ export default function HistoryTab({ history, isDark = false }: HistoryTabProps)
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
                       <span className={`px-2.5 py-0.5 rounded text-xs font-semibold uppercase border ${colorClass}`}>
-                        {item.action}
+                        {t(item.action)}
                       </span>
                       <span className="text-sm font-semibold font-mono">
                         {item.versionBefore === 0 ? 'v1' : `v${item.versionBefore}`} → v{item.versionAfter}
@@ -84,7 +87,7 @@ export default function HistoryTab({ history, isDark = false }: HistoryTabProps)
                   <p className={`text-xs leading-relaxed font-sans font-medium whitespace-pre-wrap pl-1 mt-1 ${
                     isDark ? 'text-slate-200' : 'text-gray-700'
                   }`}>
-                    {item.details}
+                    {t(item.details)}
                   </p>
 
                   <div className="text-[10px] text-gray-400 font-mono flex items-center justify-end border-t border-gray-150/10 pt-2 mt-1">

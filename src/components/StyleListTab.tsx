@@ -5,6 +5,7 @@ import {
   ArrowUpDown, ChevronDown, ChevronUp, Shirt, BookOpen, Clock, Activity, Settings, Info
 } from 'lucide-react';
 import { exportAllStylesToExcel, exportSingleStyleToExcel } from './ExcelExporter';
+import { useLanguage } from '../lib/LanguageContext';
 
 interface StyleListTabProps {
   styles: Style[];
@@ -19,6 +20,7 @@ export default function StyleListTab({
   onDeleteStyle,
   isDark = false
 }: StyleListTabProps) {
+  const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedStyleId, setExpandedStyleId] = useState<string | null>(null);
 
@@ -122,7 +124,7 @@ export default function StyleListTab({
             <Search className="absolute inset-y-0 left-3.5 my-auto w-4.5 h-4.5 text-gray-400" />
             <input
               type="text"
-              placeholder="Tìm kiếm Style..."
+              placeholder={t("Tìm kiếm Style...")}
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
               className={`w-full pl-10 pr-4 py-2.5 rounded-xl text-sm transition-all font-semibold ${
@@ -139,7 +141,7 @@ export default function StyleListTab({
             className="h-11 px-4 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-750 rounded-xl shadow-md shadow-emerald-500/10 active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
           >
             <FileSpreadsheet className="w-4 h-4" /> 
-            <span>Xuất Excel tóm tắt ({filteredStyles.length})</span>
+            <span>{t("Xuất Excel tóm tắt")} ({filteredStyles.length})</span>
           </button>
         </div>
 
@@ -147,55 +149,55 @@ export default function StyleListTab({
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 border-t border-gray-100/30 pt-3">
           {/* Filter Product type */}
           <div>
-            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Loại sản phẩm</label>
+            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">{t("Loại sản phẩm")}</label>
             <select
               value={productTypeFilter}
               onChange={e => setProductTypeFilter(e.target.value)}
               className="w-full px-2.5 py-2 border border-gray-300 rounded-lg text-xs bg-white text-gray-700 font-semibold focus:ring-2 focus:ring-blue-500"
             >
-              <option value="">-- Tất cả loại --</option>
-              {uniqueProductTypes.map(t => (
-                <option key={t} value={t}>{t}</option>
+              <option value="">{t("-- Tất cả loại --")}</option>
+              {uniqueProductTypes.map(tVal => (
+                <option key={tVal} value={tVal}>{tVal}</option>
               ))}
             </select>
           </div>
 
           {/* Filter Complexity */}
           <div>
-            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Độ phức tạp</label>
+            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">{t("Độ phức tạp")}</label>
             <select
               value={complexityFilter}
               onChange={e => setComplexityFilter(e.target.value)}
               className="w-full px-2.5 py-2 border border-gray-300 rounded-lg text-xs bg-white text-gray-700 font-semibold focus:ring-2 focus:ring-blue-500"
             >
-              <option value="">-- Tất cả độ khó --</option>
-              {uniqueComplexities.map(c => (
-                <option key={c} value={c}>{c}</option>
+              <option value="">{t("-- Tất cả độ khó --")}</option>
+              {uniqueComplexities.map(cVal => (
+                <option key={cVal} value={cVal}>{cVal}</option>
               ))}
             </select>
           </div>
 
           {/* Sorter selection (Handy on Mobile) */}
           <div className="col-span-2">
-            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Sắp xếp</label>
+            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">{t("Sắp xếp")}</label>
             <div className="grid grid-cols-2 gap-1.5">
               <select
                 value={sortField}
                 onChange={e => handleSort(e.target.value as any)}
                 className="w-full px-2.5 py-2 border border-gray-300 rounded-lg text-xs bg-white text-gray-700 font-semibold focus:ring-2 focus:ring-blue-500"
               >
-                <option value="createdAt">📅 Mới nhất</option>
-                <option value="styleCode">🔢 Mã hàng</option>
-                <option value="styleName">✏️ Tên Style</option>
-                <option value="finalSmv">⏱️ Tổng SMV</option>
+                <option value="createdAt">📅 {t("Ngày tạo")}</option>
+                <option value="styleCode">🔢 {t("Mã Style")}</option>
+                <option value="styleName">✏️ {t("Tên Style")}</option>
+                <option value="finalSmv">⏱️ {t("Tổng SMV")}</option>
               </select>
               <button
                 type="button"
                 onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
                 className="px-2.5 py-2 border border-gray-300 rounded-lg text-xs font-bold text-gray-600 hover:text-gray-900 bg-gray-50 flex items-center justify-center gap-1 active:scale-95 cursor-pointer"
               >
-                <span>Chiều:</span>
-                <strong className="text-blue-600">{sortOrder === 'asc' ? 'Tăng' : 'Giảm'}</strong>
+                <span>{t("Thứ tự")}:</span>
+                <strong className="text-blue-600">{sortOrder === 'asc' ? t("Tăng dần") : t("Giảm dần")}</strong>
               </button>
             </div>
           </div>
@@ -207,7 +209,7 @@ export default function StyleListTab({
         {sortedStyles.length === 0 ? (
           <div className="p-8 text-center text-gray-400 bg-gray-50 rounded-2xl border border-gray-100">
             <Shirt className="w-10 h-10 mx-auto mb-2 opacity-25" />
-            <p className="text-sm font-bold">Không tìm thấy Style nào phù hợp.</p>
+            <p className="text-sm font-bold">{t("Không tìm thấy Style nào phù hợp.")}</p>
           </div>
         ) : (
           sortedStyles.map(style => {
@@ -256,7 +258,7 @@ export default function StyleListTab({
                 {/* Sub headers (Date and Estimator) */}
                 <div className="flex flex-wrap items-center justify-between text-[11px] text-gray-400 border-t border-b border-gray-100/50 py-1.5 font-medium">
                   <span className="flex items-center gap-1">
-                    <User className="w-3.5 h-3.5 text-gray-400" /> IE: {style.estimator}
+                    <User className="w-3.5 h-3.5 text-gray-400" /> {t("Người đo")}: {style.estimator}
                   </span>
                   <span className="flex items-center gap-1 font-mono">
                     <Calendar className="w-3.5 h-3.5 text-gray-400" /> {formatDate(style.createdAt)}
@@ -270,9 +272,9 @@ export default function StyleListTab({
                   </span>
                   <span className="text-xs font-bold text-blue-600 flex items-center gap-0.5">
                     {isExpanded ? (
-                      <>Ẩn bớt <ChevronUp className="w-3.5 h-3.5" /></>
+                      <>{t("Ẩn bớt")} <ChevronUp className="w-3.5 h-3.5" /></>
                     ) : (
-                      <>Xem thêm <ChevronDown className="w-3.5 h-3.5" /></>
+                      <>{t("Xem thêm")} <ChevronDown className="w-3.5 h-3.5" /></>
                     )}
                   </span>
                 </div>
@@ -284,7 +286,7 @@ export default function StyleListTab({
                     {/* Render Image Thumbnail if exists */}
                     {style.patternImage && (
                       <div className="flex flex-col gap-1">
-                        <span className="text-gray-400 text-[9px] font-bold uppercase block">Hồ sơ rập:</span>
+                        <span className="text-gray-400 text-[9px] font-bold uppercase block">{t("Hồ sơ rập:")}</span>
                         <div className="w-full h-24 rounded-lg overflow-hidden border border-gray-300">
                           <img src={style.patternImage} alt="Pattern template document" className="w-full h-full object-cover" />
                         </div>
@@ -293,19 +295,19 @@ export default function StyleListTab({
 
                     {style.notes && (
                       <div>
-                        <strong className="block text-gray-700 font-bold mb-0.5">📝 Ghi chú rập/kỹ thuật:</strong>
+                        <strong className="block text-gray-700 font-bold mb-0.5">{t("📝 Ghi chú rập/kỹ thuật:")}</strong>
                         <p className="text-gray-600 leading-relaxed italic">{style.notes}</p>
                       </div>
                     )}
 
                     {/* Industrial Formula details */}
                     <div>
-                      <strong className="block text-gray-700 font-bold mb-1">🧮 Diễn giải công thức:</strong>
+                      <strong className="block text-gray-700 font-bold mb-1">{t("🧮 Diễn giải công thức:")}</strong>
                       <div className="bg-slate-900 text-white p-2.5 rounded-md font-mono text-[10px] leading-relaxed overflow-x-auto">
                         <div className="text-blue-400 font-bold mb-0.5">SMV = Base_SMV × f_Loại × f_Khó × f_Bậc × f_Nghề × (1 + Allowance)</div>
                         <div className="border-t border-slate-800/80 mt-1 pt-1 text-slate-300">
                           = {style.baseSmv} × {calc?.productTypeVal} × {calc?.complexityVal} × {calc?.perimeterFactor} × {calc?.experienceVal} × {(1 + (calc?.allowanceVal || 0)).toFixed(2)}
-                          <div className="text-emerald-400 font-bold mt-0.5">= {finalSmv.toFixed(3)} phút</div>
+                          <div className="text-emerald-400 font-bold mt-0.5">= {finalSmv.toFixed(3)} {t("phút")}</div>
                         </div>
                       </div>
                     </div>
@@ -313,27 +315,27 @@ export default function StyleListTab({
                     {/* Applied factors list */}
                     <div className="space-y-1 text-gray-600 font-semibold text-[11px]">
                       <div className="flex justify-between border-b border-gray-200/50 pb-1">
-                        <span>Thời gian nền:</span>
-                        <span className="text-gray-900 font-mono">{style.baseSmv.toFixed(2)} phút ({style.patternPerimeterCm} cm)</span>
+                        <span>{t("Thời gian nền:")}</span>
+                        <span className="text-gray-900 font-mono">{style.baseSmv.toFixed(2)} {t("phút")} ({style.patternPerimeterCm} cm)</span>
                       </div>
                       <div className="flex justify-between border-b border-gray-200/50 pb-1">
-                        <span>👕 Hệ số sản phẩm:</span>
+                        <span>👕 {t("Hệ số sản phẩm:")}</span>
                         <span className="text-gray-900">{calc?.productTypeName} (x{calc?.productTypeVal.toFixed(2)})</span>
                       </div>
                       <div className="flex justify-between border-b border-gray-200/50 pb-1">
-                        <span>⚙️ Hệ số độ phức tạp:</span>
+                        <span>⚙️ {t("Hệ số độ phức tạp:")}</span>
                         <span className="text-gray-900">{calc?.complexityName} (x{calc?.complexityVal.toFixed(2)})</span>
                       </div>
                       <div className="flex justify-between border-b border-gray-200/50 pb-1">
-                        <span>📏 Hệ số bậc chu vi rập:</span>
-                        <span className="text-gray-900">{calc?.perimeterTierName} (x{calc?.perimeterFactor.toFixed(2)})</span>
+                        <span>📏 {t("Hệ số bậc chu vi rập:")}</span>
+                        <span className="text-gray-900">{calc?.perimeterFactor.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between border-b border-gray-200/50 pb-1">
-                        <span>👤 Hệ số tay nghề:</span>
+                        <span>👤 {t("Hệ số tay nghề:")}</span>
                         <span className="text-gray-900">{calc?.experienceName} (x{calc?.experienceVal.toFixed(2)})</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>🔋 Hệ số bù hao:</span>
+                        <span>🔋 {t("Hệ số bù hao:")}</span>
                         <span className="text-emerald-600">+{((calc?.allowanceVal || 0) * 100).toFixed(0)}%</span>
                       </div>
                     </div>
@@ -352,14 +354,14 @@ export default function StyleListTab({
                         onClick={(e) => handleEditClick(e, style)}
                         className="py-2.5 bg-blue-50 text-blue-800 hover:bg-blue-100 rounded-lg text-[10px] font-bold border border-blue-200 flex items-center justify-center gap-1 active:scale-95 transition-all cursor-pointer"
                       >
-                        <Edit className="w-3.5 h-3.5" /> Sửa
+                        <Edit className="w-3.5 h-3.5" /> {t("Sửa")}
                       </button>
                       <button
                         type="button"
                         onClick={(e) => handleDeleteClick(e, style)}
                         className="py-2.5 bg-red-50 text-red-800 hover:bg-red-100 rounded-lg text-[10px] font-bold border border-red-200 flex items-center justify-center gap-1 active:scale-95 transition-all cursor-pointer"
                       >
-                        <Trash2 className="w-3.5 h-3.5" /> Xoá
+                        <Trash2 className="w-3.5 h-3.5" /> {t("Xoá")}
                       </button>
                     </div>
                   </div>
@@ -374,7 +376,7 @@ export default function StyleListTab({
       <div className="hidden md:block bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
         {sortedStyles.length === 0 ? (
           <div className="p-12 text-center text-gray-500">
-            <p className="text-base font-semibold">Chưa tìm thấy Style nào khớp với điều kiện.</p>
+            <p className="text-base font-semibold">{t("Chưa tìm thấy Style nào khớp với điều kiện.")}</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -383,27 +385,27 @@ export default function StyleListTab({
                 <tr className="bg-gray-50 border-b border-gray-100 text-xs text-gray-500 uppercase tracking-wider font-mono">
                   <th className="py-3.5 px-4 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('styleCode')}>
                     <div className="flex items-center gap-1">
-                      Mã hàng
+                      {t("Mã hàng")}
                       <ArrowUpDown className="w-3.5 h-3.5" />
                     </div>
                   </th>
                   <th className="py-3.5 px-4 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('styleName')}>
                     <div className="flex items-center gap-1">
-                      Tên Style
+                      {t("Tên Style")}
                       <ArrowUpDown className="w-3.5 h-3.5" />
                     </div>
                   </th>
-                  <th className="py-3.5 px-4">Khách hàng</th>
-                  <th className="py-3.5 px-4 text-center">Chu vi rập (cm)</th>
+                  <th className="py-3.5 px-4">{t("Khách hàng")}</th>
+                  <th className="py-3.5 px-4 text-center">{t("Chu vi rập (cm)")}</th>
                   <th className="py-3.5 px-4 text-right">Base SMV</th>
                   <th className="py-3.5 px-4 text-right cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('finalSmv')}>
                     <div className="flex items-center gap-1 justify-end">
-                      SMV Cuối (Phút)
+                      {t("SMV Cuối (Phút)")}
                       <ArrowUpDown className="w-3.5 h-3.5" />
                     </div>
                   </th>
-                  <th className="py-3.5 px-4">Người đo</th>
-                  <th className="py-3.5 px-4 text-center">Thao tác</th>
+                  <th className="py-3.5 px-4">{t("Người đo")}</th>
+                  <th className="py-3.5 px-4 text-center">{t("Thao tác")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 text-sm">
@@ -450,7 +452,7 @@ export default function StyleListTab({
                               type="button"
                               onClick={() => toggleRowExpand(style.id)}
                               className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-all cursor-pointer"
-                              title="Xem chi tiết diễn giải"
+                              title={t("Xem chi tiết diễn giải")}
                             >
                               {isExpanded ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                             </button>
@@ -458,7 +460,7 @@ export default function StyleListTab({
                               type="button"
                               onClick={() => exportSingleStyleToExcel(style)}
                               className="p-1.5 text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 rounded-md transition-all cursor-pointer"
-                              title="Xuất Excel Chi tiết"
+                              title={t("Xuất Excel Chi tiết")}
                             >
                               <FileSpreadsheet className="w-4 h-4" />
                             </button>
@@ -466,7 +468,7 @@ export default function StyleListTab({
                               type="button"
                               onClick={(e) => handleEditClick(e, style)}
                               className="p-1.5 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-md transition-all cursor-pointer"
-                              title="Sửa Style"
+                              title={t("Sửa Style")}
                             >
                               <Edit className="w-4 h-4" />
                             </button>
@@ -474,7 +476,7 @@ export default function StyleListTab({
                               type="button"
                               onClick={(e) => handleDeleteClick(e, style)}
                               className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-md transition-all cursor-pointer"
-                              title="Xoá Style"
+                              title={t("Xoá Style")}
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -489,7 +491,7 @@ export default function StyleListTab({
                             <div className="bg-white rounded-xl border border-gray-200/80 p-5 shadow-xs grid grid-cols-1 md:grid-cols-12 gap-6">
                               <div className="md:col-span-4 flex flex-col gap-4 border-r border-gray-100 pr-6">
                                 <div>
-                                  <span className="text-gray-400 text-[10px] font-mono block uppercase font-bold">Chi tiết Style</span>
+                                  <span className="text-gray-400 text-[10px] font-mono block uppercase font-bold">{t("Chi tiết Style")}</span>
                                   <h4 className="text-lg font-bold text-gray-900 mt-0.5">{style.styleCode}</h4>
                                   <p className="text-sm text-gray-600">{style.styleName}</p>
                                 </div>
@@ -497,7 +499,7 @@ export default function StyleListTab({
                                 {/* Thumbnail Pattern if exists */}
                                 {style.patternImage && (
                                   <div className="flex flex-col gap-1">
-                                    <span className="text-gray-400 text-[9px] font-bold uppercase block">Bản chụp Pattern:</span>
+                                    <span className="text-gray-400 text-[9px] font-bold uppercase block">{t("Bản chụp Pattern:")}</span>
                                     <div className="w-full h-28 rounded-lg overflow-hidden border border-gray-200 shadow-2xs">
                                       <img src={style.patternImage} alt="Pattern template document preview" className="w-full h-full object-cover" />
                                     </div>
@@ -506,32 +508,32 @@ export default function StyleListTab({
 
                                 <div className="space-y-1.5 text-xs text-gray-600 font-semibold">
                                   <div className="flex justify-between">
-                                    <span className="text-gray-400">Khách hàng:</span>
+                                    <span className="text-gray-400">{t("Khách hàng:")}</span>
                                     <span className="text-gray-800">{style.customer || '—'}</span>
                                   </div>
                                   <div className="flex justify-between">
-                                    <span className="text-gray-400">Người đo:</span>
+                                    <span className="text-gray-400">{t("Người đo:")}</span>
                                     <span className="text-gray-800">{style.estimator}</span>
                                   </div>
                                   <div className="flex justify-between">
-                                    <span className="text-gray-400">Ngày tạo:</span>
+                                    <span className="text-gray-400">{t("Ngày tạo:")}</span>
                                     <span className="text-gray-800 font-mono">{formatDate(style.createdAt)}</span>
                                   </div>
                                 </div>
 
                                 {style.notes && (
                                   <div className="mt-2 bg-slate-50 p-2.5 rounded-lg border border-slate-100 text-xs">
-                                    <strong className="block text-gray-700 font-bold mb-1">📝 Ghi chú rập/kỹ thuật:</strong>
+                                    <strong className="block text-gray-700 font-bold mb-1">{t("📝 Ghi chú rập/kỹ thuật:")}</strong>
                                     <p className="text-gray-600 leading-relaxed italic">{style.notes}</p>
                                   </div>
                                 )}
                               </div>
 
                               <div className="md:col-span-8 flex flex-col gap-4">
-                                <h5 className="text-xs text-gray-400 font-mono uppercase tracking-wider font-bold">Diễn giải công thức & hệ số</h5>
+                                <h5 className="text-xs text-gray-400 font-mono uppercase tracking-wider font-bold">{t("Diễn giải công thức & hệ số")}</h5>
                                 
                                 <div className="bg-slate-900 text-white p-3.5 rounded-xl font-mono text-xs overflow-x-auto leading-relaxed">
-                                  <div className="text-blue-400 font-bold mb-1">SMV cuối cùng = Base_SMV × f_Loại × f_Khó × f_Bậc × f_Nghề × (1 + % Allowance)</div>
+                                  <div className="text-blue-400 font-bold mb-1">{t("SMV cuối cùng = Base_SMV × f_Loại × f_Khó × f_Bậc × f_Nghề × (1 + % Allowance)")}</div>
                                   <div className="mt-2 text-slate-300 border-t border-slate-800 pt-2 flex flex-wrap gap-x-2.5 gap-y-1">
                                     <span>= <strong className="text-white font-bold">{style.baseSmv}</strong></span>
                                     <span>× <strong className="text-yellow-400 font-bold">{calc?.productTypeVal}</strong></span>
@@ -539,33 +541,33 @@ export default function StyleListTab({
                                     <span>× <strong className="text-yellow-400 font-bold">{calc?.perimeterFactor}</strong></span>
                                     <span>× <strong className="text-yellow-400 font-bold">{calc?.experienceVal}</strong></span>
                                     <span>× <strong className="text-yellow-400 font-bold">{(1 + (calc?.allowanceVal || 0)).toFixed(2)}</strong></span>
-                                    <span className="text-emerald-400 font-bold font-sans ml-1">= {finalSmv.toFixed(3)} phút</span>
+                                    <span className="text-emerald-400 font-bold font-sans ml-1">= {finalSmv.toFixed(3)} {t("phút")}</span>
                                   </div>
                                 </div>
 
                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                                   <div className="p-3 bg-gray-50 rounded-xl border border-gray-150">
-                                    <span className="text-gray-400 font-semibold block">Thời gian gốc (Base SMV)</span>
-                                    <span className="font-bold text-gray-900 mt-1 font-mono block text-sm">{calc?.baseSmv.toFixed(3)} phút</span>
+                                    <span className="text-gray-400 font-semibold block">{t("Thời gian gốc (Base SMV)")}</span>
+                                    <span className="font-bold text-gray-900 mt-1 font-mono block text-sm">{calc?.baseSmv.toFixed(3)} {t("phút")}</span>
                                   </div>
                                   <div className="p-3 bg-gray-50 rounded-xl border border-gray-150">
-                                    <span className="text-gray-400 font-semibold block">👕 Loại sản phẩm</span>
-                                    <span className="font-bold text-blue-600 mt-1 font-mono block text-sm">Hệ số: {calc?.productTypeVal.toFixed(2)}</span>
+                                    <span className="text-gray-400 font-semibold block">👕 {t("Loại sản phẩm")}</span>
+                                    <span className="font-bold text-blue-600 mt-1 font-mono block text-sm">{t("Hệ số:")} {calc?.productTypeVal.toFixed(2)}</span>
                                   </div>
                                   <div className="p-3 bg-gray-50 rounded-xl border border-gray-150">
-                                    <span className="text-gray-400 font-semibold block">⚙️ Độ phức tạp kỹ thuật</span>
-                                    <span className="font-bold text-blue-600 mt-1 font-mono block text-sm">Hệ số: {calc?.complexityVal.toFixed(2)}</span>
+                                    <span className="text-gray-400 font-semibold block">⚙️ {t("Độ phức tạp kỹ thuật")}</span>
+                                    <span className="font-bold text-blue-600 mt-1 font-mono block text-sm">{t("Hệ số:")} {calc?.complexityVal.toFixed(2)}</span>
                                   </div>
                                   <div className="p-3 bg-gray-50 rounded-xl border border-gray-150">
-                                    <span className="text-gray-400 font-semibold block">📏 Bậc chu vi rập (cm)</span>
-                                    <span className="font-bold text-blue-600 mt-1 font-mono block text-sm">Hệ số: {calc?.perimeterFactor.toFixed(2)}</span>
+                                    <span className="text-gray-400 font-semibold block">📏 {t("Bậc chu vi rập (cm)")}</span>
+                                    <span className="font-bold text-blue-600 mt-1 font-mono block text-sm">{t("Hệ số:")} {calc?.perimeterFactor.toFixed(2)}</span>
                                   </div>
                                   <div className="p-3 bg-gray-50 rounded-xl border border-gray-150">
-                                    <span className="text-gray-400 font-semibold block">👤 Kinh nghiệm may</span>
-                                    <span className="font-bold text-blue-600 mt-1 font-mono block text-sm">Hệ số: {calc?.experienceVal.toFixed(2)}</span>
+                                    <span className="text-gray-400 font-semibold block">👤 {t("Kinh nghiệm may")}</span>
+                                    <span className="font-bold text-blue-600 mt-1 font-mono block text-sm">{t("Hệ số:")} {calc?.experienceVal.toFixed(2)}</span>
                                   </div>
                                   <div className="p-3 bg-gray-50 rounded-xl border border-gray-150">
-                                    <span className="text-gray-400 font-semibold block">🔋 Bù hao Allowance</span>
+                                    <span className="text-gray-400 font-semibold block">🔋 {t("Bù hao Allowance")}</span>
                                     <span className="font-bold text-emerald-600 mt-1 font-mono block text-sm">+{((calc?.allowanceVal || 0) * 100).toFixed(0)}%</span>
                                   </div>
                                 </div>

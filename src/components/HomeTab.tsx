@@ -3,6 +3,7 @@ import { Style, CoefficientLibrary } from '../types';
 import { 
   Shirt, Calculator, BookOpen, Clock, Activity, ArrowRight, CheckCircle, Wifi, Moon, Sun, Award
 } from 'lucide-react';
+import { useLanguage } from '../lib/LanguageContext';
 
 interface HomeTabProps {
   styles: Style[];
@@ -19,6 +20,7 @@ export default function HomeTab({
   onEditStyle,
   isDark
 }: HomeTabProps) {
+  const { t } = useLanguage();
   
   // Calculate statistics
   const totalStyles = styles.length;
@@ -44,11 +46,11 @@ export default function HomeTab({
           <div>
             <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-white/10 text-white text-[10px] font-bold mb-2">
               <Award className="w-3 h-3 text-yellow-300" />
-              <span>Hệ thống Công nghệ IE May Mặc</span>
+              <span>{t("Hệ thống Công nghệ IE May Mặc")}</span>
             </div>
             <h1 className="text-xl md:text-2xl font-extrabold tracking-tight">SMV Estimator</h1>
             <p className="text-xs text-blue-100/90 mt-1 max-w-xl leading-relaxed">
-              Ước lượng thời gian Sewing Minute Value từ rập Pattern. Tối ưu hóa trực quan cho thiết bị di động của kỹ sư.
+              {t("Ước lượng thời gian Sewing Minute Value từ rập Pattern. Tối ưu hóa trực quan cho thiết bị di động của kỹ sư.")}
             </p>
           </div>
           
@@ -59,7 +61,7 @@ export default function HomeTab({
             className="flex items-center justify-center gap-2 px-5 py-3.5 bg-white text-blue-700 hover:bg-blue-50 active:scale-95 transition-all rounded-lg font-bold text-xs shadow-xs cursor-pointer whitespace-nowrap self-stretch md:self-auto"
           >
             <Calculator className="w-4 h-4 text-blue-600" />
-            <span>TÍNH STYLE MỚI</span>
+            <span>{t("TÍNH STYLE MỚI")}</span>
             <ArrowRight className="w-3.5 h-3.5 ml-0.5" />
           </button>
         </div>
@@ -76,7 +78,7 @@ export default function HomeTab({
               <Shirt className="w-4 h-4" />
             </div>
             <div>
-              <span className="text-[10px] text-gray-400 block font-semibold">TỔNG STYLE</span>
+              <span className="text-[10px] text-gray-400 block font-semibold">{t("TỔNG STYLE")}</span>
               <strong className={`text-base font-black ${isDark ? 'text-white' : 'text-gray-900'}`}>{totalStyles}</strong>
             </div>
           </div>
@@ -91,9 +93,9 @@ export default function HomeTab({
               <Clock className="w-4 h-4" />
             </div>
             <div>
-              <span className="text-[10px] text-gray-400 block font-semibold">SMV TRUNG BÌNH</span>
+              <span className="text-[10px] text-gray-400 block font-semibold">{t("SMV TRUNG BÌNH")}</span>
               <strong className={`text-base font-black ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                {avgSmv > 0 ? avgSmv.toFixed(2) : '0.00'}<span className="text-[10px] font-normal text-gray-400 ml-0.5">m</span>
+                {avgSmv > 0 ? avgSmv.toFixed(2) : '0.00'}<span className="text-[10px] font-normal text-gray-400 ml-0.5">{t("phút")}</span>
               </strong>
             </div>
           </div>
@@ -108,7 +110,7 @@ export default function HomeTab({
               <BookOpen className="w-4 h-4" />
             </div>
             <div>
-              <span className="text-[10px] text-gray-400 block font-semibold">PHIÊN BẢN HỆ SỐ</span>
+              <span className="text-[10px] text-gray-400 block font-semibold">{t("PHIÊN BẢN HỆ SỐ")}</span>
               <strong className={`text-base font-black ${isDark ? 'text-white' : 'text-gray-900'}`}>
                 v{library?.version || '1.0'}
               </strong>
@@ -125,7 +127,7 @@ export default function HomeTab({
               <Activity className="w-4 h-4" />
             </div>
             <div>
-              <span className="text-[10px] text-gray-400 block font-semibold">KHÁCH HÀNG</span>
+              <span className="text-[10px] text-gray-400 block font-semibold">{t("KHÁCH HÀNG")}</span>
               <strong className={`text-base font-black ${isDark ? 'text-white' : 'text-gray-900'}`}>
                 {uniqueCustomers}
               </strong>
@@ -151,9 +153,9 @@ export default function HomeTab({
             <BookOpen className="w-5 h-5" />
           </div>
           <div>
-            <h3 className={`font-bold text-xs ${isDark ? 'text-white' : 'text-gray-900'}`}>Thư viện Hệ số định biên</h3>
+            <h3 className={`font-bold text-xs ${isDark ? 'text-white' : 'text-gray-900'}`}>{t("Thư viện Hệ số định biên")}</h3>
             <p className="text-[11px] text-gray-400 mt-0.5 leading-relaxed">
-              Cấu hình định mức nền, hệ số loại sản phẩm, độ phức tạp và phân bậc tổng chu vi rập mẫu.
+              {t("Cấu hình định mức nền, hệ số loại sản phẩm, độ phức tạp và phân bậc tổng chu vi rập mẫu.")}
             </p>
           </div>
         </button>
@@ -173,9 +175,9 @@ export default function HomeTab({
             <Shirt className="w-5 h-5" />
           </div>
           <div>
-            <h3 className={`font-bold text-xs ${isDark ? 'text-white' : 'text-gray-900'}`}>Hồ sơ rập & Style hàng</h3>
+            <h3 className={`font-bold text-xs ${isDark ? 'text-white' : 'text-gray-900'}`}>{t("Hồ sơ rập & Style hàng")}</h3>
             <p className="text-[11px] text-gray-400 mt-0.5 leading-relaxed">
-              Tra cứu hồ sơ mẫu, phân rã chi tiết công thức, xuất báo cáo kỹ thuật Excel cho đơn vị sản xuất.
+              {t("Tra cứu hồ sơ mẫu, phân rã chi tiết công thức, xuất báo cáo kỹ thuật Excel cho đơn vị sản xuất.")}
             </p>
           </div>
         </button>
@@ -186,14 +188,14 @@ export default function HomeTab({
         <div className="flex justify-between items-center">
           <h2 className={`text-sm font-bold flex items-center gap-1.5 ${isDark ? 'text-slate-200' : 'text-gray-900'}`}>
             <Activity className="w-4.5 h-4.5 text-blue-500" />
-            <span>Style gần đây</span>
+            <span>{t("Style gần đây")}</span>
           </h2>
           {totalStyles > 0 && (
             <button
               onClick={() => onNavigateToTab('styles_list')}
               className="text-xs font-bold text-blue-600 hover:underline cursor-pointer"
             >
-              Xem tất cả ({totalStyles})
+              {t("Xem tất cả")} ({totalStyles})
             </button>
           )}
         </div>
@@ -203,8 +205,8 @@ export default function HomeTab({
             isDark ? 'bg-slate-800/20 border-slate-800 text-slate-500' : 'bg-gray-50 border-gray-100 text-gray-400'
           }`}>
             <Shirt className="w-8 h-8 mx-auto mb-2 opacity-35" />
-            <p className="text-xs font-semibold">Chưa có Style nào được ước lượng.</p>
-            <p className="text-[10px] text-gray-400 mt-1">Chọn "Tính Style mới" ở trên để bắt đầu ước lượng SMV.</p>
+            <p className="text-xs font-semibold">{t("Chưa có Style nào được ước lượng.")}</p>
+            <p className="text-[10px] text-gray-400 mt-1">{t("Chọn \"Tính Style mới\" ở trên để bắt đầu ước lượng SMV.")}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-2.5" id="home-recent-styles-list">
@@ -247,7 +249,7 @@ export default function HomeTab({
                       <strong className="text-sm font-black text-emerald-500 font-mono">
                         {smvValue.toFixed(2)}
                       </strong>
-                      <span className="text-[9px] text-gray-400 block">phút</span>
+                      <span className="text-[9px] text-gray-400 block">{t("phút")}</span>
                     </div>
                     <ArrowRight className="w-3.5 h-3.5 text-gray-400" />
                   </div>
@@ -264,9 +266,9 @@ export default function HomeTab({
       }`}>
         <span className="text-xs text-amber-500">💡</span>
         <div className="text-[11px] leading-relaxed">
-          <strong className={isDark ? 'text-amber-400' : 'text-amber-800'}>Mẹo IE:</strong>
+          <strong className={isDark ? 'text-amber-400' : 'text-amber-800'}>{t("Mẹo IE:")}</strong>
           <span className={isDark ? 'text-slate-300' : 'text-amber-900/80'}>
-            {" "}Tổng chu vi rập mẫu ảnh hưởng trực tiếp đến thời gian may nền. Luôn đo chính xác tổng chu vi tất cả chi tiết rập mẫu trước khi ước lượng.
+            {" "}{t("Tổng chu vi rập mẫu ảnh hưởng trực tiếp đến thời gian may nền. Luôn đo chính xác tổng chu vi tất cả chi tiết rập mẫu trước khi ước lượng.")}
           </span>
         </div>
       </div>

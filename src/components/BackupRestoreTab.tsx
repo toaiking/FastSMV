@@ -3,6 +3,7 @@ import { CoefficientLibrary, Style, CoefficientHistory } from '../types';
 import { 
   Database, Download, Upload, ShieldAlert, CheckCircle2, Wifi, WifiOff, FileJson, Layers, Shirt, History, FileDown, FileUp, AlertCircle, RefreshCw, ArrowDownToLine
 } from 'lucide-react';
+import { useLanguage } from '../lib/LanguageContext';
 
 interface BackupRestoreTabProps {
   library: CoefficientLibrary;
@@ -29,6 +30,8 @@ export default function BackupRestoreTab({
   isLocalStorageMode = false,
   onLibraryUpdate
 }: BackupRestoreTabProps) {
+  const { t } = useLanguage();
+  
   // Local state
   const [dragActive, setDragActive] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -100,10 +103,10 @@ export default function BackupRestoreTab({
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
 
-      setSuccessMsg('Xuất dữ liệu hệ thống thành công! File đã được tải xuống.');
+      setSuccessMsg(t('Xuất dữ liệu hệ thống thành công! File đã được tải xuống.'));
       setTimeout(() => setSuccessMsg(''), 4000);
     } catch (err: any) {
-      setErrorMsg(`Lỗi khi xuất dữ liệu: ${err.message}`);
+      setErrorMsg(`${t("Lỗi khi xuất dữ liệu:")} ${err.message}`);
       setTimeout(() => setErrorMsg(''), 4000);
     } finally {
       setIsExporting(false);
@@ -143,7 +146,7 @@ export default function BackupRestoreTab({
     setImportSummary(null);
 
     if (!file.name.endsWith('.json')) {
-      setErrorMsg('Vui lòng chọn tệp định dạng JSON (.json) được xuất từ hệ thống.');
+      setErrorMsg(t('Vui lòng chọn tệp định dạng JSON (.json) được xuất từ hệ thống.'));
       return;
     }
 
@@ -170,11 +173,11 @@ export default function BackupRestoreTab({
             setSelectedFile(file);
             return;
           }
-          throw new Error('Định dạng tệp không hợp lệ. Phải là file backup xuất từ hệ thống SMV.');
+          throw new Error(t('Định dạng tệp không hợp lệ. Phải là file backup xuất từ hệ thống SMV.'));
         }
 
         if (!parsed.library || !parsed.library.coefficients || !parsed.library.partTiers) {
-          throw new Error('Tệp thiếu thông tin thư viện hệ số.');
+          throw new Error(t('Tệp thiếu thông tin thư viện hệ số.'));
         }
 
         setImportSummary({
@@ -185,7 +188,7 @@ export default function BackupRestoreTab({
         });
         setSelectedFile(file);
       } catch (err: any) {
-        setErrorMsg(`Không thể đọc file sao lưu: ${err.message}`);
+        setErrorMsg(`${t("Không thể đọc file sao lưu:")} ${err.message}`);
       }
     };
     reader.readAsText(file);
@@ -196,9 +199,9 @@ export default function BackupRestoreTab({
     if (!importSummary) return;
 
     const { parsedData, version, stylesCount } = importSummary;
-    const confirmText = stylesCount > 0 
-      ? `Bạn có chắc chắn muốn nạp dữ liệu? Thao tác này sẽ ghi đè và thay thế hoàn toàn:\n- Thư viện hệ số hiện tại (sẽ thay bằng v${version})\n- Toàn bộ ${styles.length} Hồ sơ Style hiện tại (sẽ thay bằng ${stylesCount} Style từ file)\n\nDữ liệu hiện tại trên thiết bị này sẽ bị Xoá và không thể khôi phục!`
-      : `Bạn có chắc chắn muốn nạp dữ liệu? Thao tác này sẽ khôi phục thư viện hệ số về v${version}. Toàn bộ hệ số hiện tại sẽ bị ghi đè!`;
+    const confirmText = stylesCount > 0
+      ? `${t("Bạn có chắc chắn muốn nạp dữ liệu? Thao tác này sẽ ghi đè và thay thế hoàn toàn:")}\n- ${t("Thư viện hệ số hiện tại")} (v${version})\n- ${t("Toàn bộ")} ${styles.length} ${t("Hồ sơ Style hiện tại")} (${stylesCount} style)\n\n${t("Dữ liệu hiện tại trên thiết bị này sẽ bị Xoá và không thể khôi phục!")}`
+      : `${t("Bạn có chắc chắn muốn nạp dữ liệu? Thao tác này sẽ khôi phục thư viện hệ số về")} v${version}. ${t("Toàn bộ hệ số hiện tại sẽ bị ghi đè!")}`;
 
     if (!confirm(confirmText)) return;
 
@@ -229,14 +232,14 @@ export default function BackupRestoreTab({
         history: finalHistory
       });
 
-      setSuccessMsg('🎉 Đồng bộ khôi phục dữ liệu toàn bộ hệ thống thành công!');
+      setSuccessMsg(t('🎉 Đồng bộ khôi phục dữ liệu toàn bộ hệ thống thành công!'));
       setImportSummary(null);
       setSelectedFile(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
 
-      setTimeout(() => setSuccessMsg(''), 5000);
+      setTimeout(() => setSuccessMsg(''), 5500);
     } catch (err: any) {
-      setErrorMsg(`Lỗi khi nạp khôi phục dữ liệu: ${err.message}`);
+      setErrorMsg(`${t("Lỗi khi nạp khôi phục dữ liệu:")} ${err.message}`);
     } finally {
       setIsImporting(false);
     }
@@ -249,18 +252,18 @@ export default function BackupRestoreTab({
       const response = await fetch('/api/coefficients/backup', { method: 'POST' });
       const result = await response.json();
       if (response.ok) {
-        setServerBackupMsg(`✅ Đã tạo sao lưu trên máy chủ thành công: ${result.fileName}`);
+        setServerBackupMsg(`✅ ${t("Đã tạo sao lưu trên máy chủ thành công:")} ${result.fileName}`);
         fetchServerBackups();
       } else {
-        setServerBackupMsg(`❌ Lỗi máy chủ: ${result.error}`);
+        setServerBackupMsg(`❌ ${t("Lỗi máy chủ:")} ${result.error}`);
       }
     } catch (e: any) {
-      setServerBackupMsg(`❌ Lỗi kết nối: ${e.message}`);
+      setServerBackupMsg(`❌ ${t("Lỗi kết nối:")} ${e.message}`);
     }
   };
 
   const handleRestoreServerBackup = async (fileName: string) => {
-    if (!confirm(`Xác nhận khôi phục thư viện hệ số về file sao lưu máy chủ "${fileName}"? Cấu hình hệ số hiện tại sẽ bị ghi đè!`)) {
+    if (!confirm(`${t("Xác nhận khôi phục thư viện hệ số về file sao lưu máy chủ")} "${fileName}"? ${t("Cấu hình hệ số hiện tại sẽ bị ghi đè!")}`)) {
       return;
     }
     setIsRestoringServer(fileName);
@@ -272,13 +275,13 @@ export default function BackupRestoreTab({
       });
       const result = await response.json();
       if (response.ok) {
-        alert(`Khôi phục thư viện hệ số thành công về phiên bản v${result.restoredLibrary.version}`);
+        alert(`${t("Khôi phục thư viện hệ số thành công về phiên bản")} v${result.restoredLibrary.version}`);
         onLibraryUpdate();
       } else {
-        alert(`Lỗi khôi phục: ${result.error}`);
+        alert(`${t("Lỗi khôi phục:")} ${result.error}`);
       }
     } catch (e: any) {
-      alert(`Lỗi kết nối máy chủ: ${e.message}`);
+      alert(`${t("Lỗi kết nối máy chủ:")} ${e.message}`);
     } finally {
       setIsRestoringServer(null);
     }
@@ -308,10 +311,10 @@ export default function BackupRestoreTab({
         <div>
           <h2 className="text-base font-bold flex items-center gap-2">
             <Database className="w-5 h-5 text-blue-500" />
-            <span>Đồng Bộ, Sao Lưu & Khôi Phục Hệ Thống</span>
+            <span>{t("Đồng Bộ, Sao Lưu & Khôi Phục Hệ Thống")}</span>
           </h2>
           <p className="text-xs text-gray-400 mt-1">
-            Quản lý dữ liệu hệ thống, nạp dữ liệu từ máy tính khác hoặc đồng bộ sang máy chủ Vercel / Live.
+            {t("Quản lý dữ liệu hệ thống, nạp dữ liệu từ máy tính khác hoặc đồng bộ sang máy chủ Vercel / Live.")}
           </p>
         </div>
 
@@ -322,7 +325,7 @@ export default function BackupRestoreTab({
             : (isDark ? 'bg-emerald-950/40 border-emerald-800 text-emerald-400' : 'bg-emerald-50 border-emerald-100 text-emerald-700')
         }`}>
           {isLocalStorageMode ? <WifiOff className="w-3.5 h-3.5" /> : <Wifi className="w-3.5 h-3.5 animate-pulse" />}
-          <span>Chế độ: {isLocalStorageMode ? 'Trình duyệt ngoại tuyến (Vercel/Local)' : 'Đồng bộ Máy chủ (Live)'}</span>
+          <span>{t("Chế độ")}: {isLocalStorageMode ? t('Trình duyệt ngoại tuyến (Vercel/Local)') : t('Đồng bộ Máy chủ (Live)')}</span>
         </div>
       </div>
 
@@ -333,13 +336,13 @@ export default function BackupRestoreTab({
         }`}>
           <div className="font-bold text-blue-600 flex items-center gap-1.5">
             <ShieldAlert className="w-4 h-4" />
-            <span>Mẹo di chuyển dữ liệu (Sync sang Vercel)</span>
+            <span>{t("Mẹo di chuyển dữ liệu (Sync sang Vercel)")}</span>
           </div>
           <p className="text-gray-400">
-            Khi chạy ứng dụng trên <strong>Vercel</strong>, do tính chất máy chủ tĩnh (Serverless), ứng dụng sẽ chạy ở chế độ <strong>Lưu trữ Trình duyệt (LocalStorage)</strong> để bảo toàn 100% chức năng của bạn.
+            {t("Khi chạy ứng dụng trên Vercel, do tính chất máy chủ tĩnh (Serverless), ứng dụng sẽ chạy ở chế độ Lưu trữ Trình duyệt (LocalStorage) để bảo toàn 100% chức năng của bạn.")}
           </p>
           <p className="text-gray-400">
-            Để nạp nhanh dữ liệu bạn đã làm việc ở máy tính cá nhân (localhost) lên Vercel: <strong>Hãy xuất file sao lưu trên máy tính cá nhân</strong>, sau đó truy cập Vercel và <strong>Nạp file sao lưu đó vào đây</strong>. Hệ thống sẽ ngay lập tức đồng bộ toàn bộ Thư viện Hệ số, Hồ sơ Style, và Nhật ký!
+            {t("Để nạp nhanh dữ liệu bạn đã làm việc ở máy tính cá nhân (localhost) lên Vercel: Hãy xuất file sao lưu trên máy tính cá nhân, sau đó truy cập Vercel và Nạp file sao lưu đó vào đây. Hệ thống sẽ ngay lập tức đồng bộ toàn bộ Thư viện Hệ số, Hồ sơ Style, và Nhật ký!")}
           </p>
         </div>
       )}
@@ -348,29 +351,29 @@ export default function BackupRestoreTab({
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className={`p-4 rounded-xl border ${isDark ? 'bg-slate-900/30 border-slate-700/50' : 'bg-slate-50/50 border-gray-150'}`}>
           <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-400">Hồ sơ Style hiện có</span>
+            <span className="text-xs text-gray-400">{t("Hồ sơ Style hiện có")}</span>
             <Shirt className="w-5 h-5 text-blue-500" />
           </div>
           <div className="text-2xl font-black mt-2 font-mono">{styles.length}</div>
-          <div className="text-[10px] text-gray-400 mt-1">Bản ghi ước lượng SMV</div>
+          <div className="text-[10px] text-gray-400 mt-1">{t("Bản ghi ước lượng SMV")}</div>
         </div>
 
         <div className={`p-4 rounded-xl border ${isDark ? 'bg-slate-900/30 border-slate-700/50' : 'bg-slate-50/50 border-gray-150'}`}>
           <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-400">Thư viện Hệ số</span>
+            <span className="text-xs text-gray-400">{t("Thư viện Hệ số")}</span>
             <Layers className="w-5 h-5 text-emerald-500" />
           </div>
           <div className="text-2xl font-black mt-2 font-mono">v{library.version}</div>
-          <div className="text-[10px] text-gray-400 mt-1">Cập nhật: {formatDate(library.updatedAt)}</div>
+          <div className="text-[10px] text-gray-400 mt-1">{t("Cập nhật")}: {formatDate(library.updatedAt)}</div>
         </div>
 
         <div className={`p-4 rounded-xl border ${isDark ? 'bg-slate-900/30 border-slate-700/50' : 'bg-slate-50/50 border-gray-150'}`}>
           <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-400">Nhật ký hệ số</span>
+            <span className="text-xs text-gray-400">{t("Nhật ký hệ số")}</span>
             <History className="w-5 h-5 text-purple-500" />
           </div>
           <div className="text-2xl font-black mt-2 font-mono">{history.length}</div>
-          <div className="text-[10px] text-gray-400 mt-1">Bản ghi lịch sử lưu trữ</div>
+          <div className="text-[10px] text-gray-400 mt-1">{t("Bản ghi lịch sử lưu trữ")}</div>
         </div>
       </div>
 
@@ -386,11 +389,11 @@ export default function BackupRestoreTab({
               <span className="p-1.5 bg-blue-500/10 text-blue-500 rounded-lg">
                 <FileDown className="w-4 h-4" />
               </span>
-              <h3 className="text-sm font-bold">1. Xuất dữ liệu hệ thống (Backup)</h3>
+              <h3 className="text-sm font-bold">1. {t("Xuất dữ liệu hệ thống (Backup)")}</h3>
             </div>
             
             <p className="text-xs text-gray-400 mb-5 leading-relaxed">
-              Tải xuống toàn bộ cấu hình hệ thống bao gồm: Thư viện Hệ số hiện tại, Danh sách tất cả Hồ sơ Style (mã hàng) đã tính toán và Nhật ký thay đổi. File tải về dưới dạng tệp tin cứng an toàn <code>.json</code>.
+              {t("Tải xuống toàn bộ cấu hình hệ thống bao gồm: Thư viện Hệ số hiện tại, Danh sách tất cả Hồ sơ Style (mã hàng) đã tính toán và Nhật ký thay đổi. File tải về dưới dạng tệp tin cứng an toàn")} <code>.json</code>.
             </p>
           </div>
 
@@ -401,7 +404,7 @@ export default function BackupRestoreTab({
               className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-600 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm transition-all active:scale-95 cursor-pointer"
             >
               <Download className="w-4 h-4" />
-              {isExporting ? 'Đang tạo bản sao lưu...' : 'Tải xuống toàn bộ Dữ liệu (.json)'}
+              {isExporting ? t('Đang tạo bản sao lưu...') : t('Tải xuống toàn bộ Dữ liệu (.json)')}
             </button>
           </div>
         </div>
@@ -415,11 +418,11 @@ export default function BackupRestoreTab({
               <span className="p-1.5 bg-emerald-500/10 text-emerald-500 rounded-lg">
                 <FileUp className="w-4 h-4" />
               </span>
-              <h3 className="text-sm font-bold">2. Nạp dữ liệu hệ thống (Restore)</h3>
+              <h3 className="text-sm font-bold">2. {t("Nạp dữ liệu hệ thống (Restore)")}</h3>
             </div>
             
             <p className="text-xs text-gray-400 mb-4 leading-relaxed">
-              Chọn tệp sao lưu <code>.json</code> từ máy tính của bạn để đồng bộ/khôi phục dữ liệu lên trình duyệt/máy chủ này.
+              {t("Chọn tệp sao lưu")} <code>.json</code> {t("từ máy tính của bạn để đồng bộ/khôi phục dữ liệu lên trình duyệt/máy chủ này.")}
             </p>
 
             {/* Drag and Drop Zone */}
@@ -436,8 +439,8 @@ export default function BackupRestoreTab({
               }`}
             >
               <Upload className="w-6 h-6 text-gray-400" />
-              <p className="text-xs font-bold text-gray-400">Kéo thả file .json vào đây hoặc click để duyệt</p>
-              <p className="text-[10px] text-gray-450">Hỗ trợ tệp backup toàn bộ hệ thống</p>
+              <p className="text-xs font-bold text-gray-400">{t("Kéo thả file .json vào đây hoặc click để duyệt")}</p>
+              <p className="text-[10px] text-gray-450">{t("Hỗ trợ tệp backup toàn bộ hệ thống")}</p>
               
               <input
                 ref={fileInputRef}
@@ -456,12 +459,12 @@ export default function BackupRestoreTab({
             }`}>
               <div className="font-bold text-emerald-600 flex items-center gap-1">
                 <CheckCircle2 className="w-4 h-4" />
-                <span>Cấu trúc tệp hợp lệ! Bản tóm tắt nội dung:</span>
+                <span>{t("Cấu trúc tệp hợp lệ! Bản tóm tắt nội dung:")}</span>
               </div>
               <ul className="space-y-1 pl-4 list-disc text-gray-400 font-medium">
-                <li>Thư viện hệ số: <strong className="text-blue-500">v{importSummary.version}</strong></li>
-                <li>Danh sách Style: <strong className="text-blue-500">{importSummary.stylesCount}</strong> mã hàng</li>
-                <li>Lịch sử thay đổi: <strong className="text-blue-500">{importSummary.historyCount}</strong> dòng nhật ký</li>
+                <li>{t("Thư viện hệ số")}: <strong className="text-blue-500">v{importSummary.version}</strong></li>
+                <li>{t("Danh sách Style")}: <strong className="text-blue-500">{importSummary.stylesCount}</strong> {t("mã hàng")}</li>
+                <li>{t("Lịch sử thay đổi")}: <strong className="text-blue-500">{importSummary.historyCount}</strong> {t("dòng nhật ký")}</li>
               </ul>
               <button
                 type="button"
@@ -470,7 +473,7 @@ export default function BackupRestoreTab({
                 className="w-full mt-2 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-lg text-xs flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer"
               >
                 <CheckCircle2 className="w-4 h-4" />
-                {isImporting ? 'Đang nạp...' : 'Xác nhận Nạp & Ghi đè hệ thống'}
+                {isImporting ? t('Đang nạp...') : t('Xác nhận Nạp & Ghi đè hệ thống')}
               </button>
             </div>
           )}
@@ -499,10 +502,10 @@ export default function BackupRestoreTab({
             <div>
               <h3 className="text-xs font-bold flex items-center gap-2">
                 <Database className="w-4 h-4 text-purple-500" />
-                <span>Sao lưu cấp độ Máy chủ (Server Database Backups)</span>
+                <span>{t("Sao lưu cấp độ Máy chủ (Server Database Backups)")}</span>
               </h3>
               <p className="text-[11px] text-gray-400 mt-0.5">
-                Các bản sao lưu cứng thư viện hệ số được tạo và lưu trực tiếp trên ổ đĩa máy chủ backend.
+                {t("Các bản sao lưu cứng thư viện hệ số được tạo và lưu trực tiếp trên ổ đĩa máy chủ backend.")}
               </p>
             </div>
             <button
@@ -510,13 +513,13 @@ export default function BackupRestoreTab({
               className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold rounded-lg shadow-sm flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap self-start"
             >
               <RefreshCw className="w-3.5 h-3.5" />
-              Tạo bản Sao lưu máy chủ mới
+              {t("Tạo bản Sao lưu máy chủ mới")}
             </button>
           </div>
 
           {serverBackupMsg && (
             <div className={`p-2.5 rounded-lg text-xs font-bold border ${
-              serverBackupMsg.includes('Lỗi') ? 'bg-red-50 text-red-700 border-red-100' : 'bg-emerald-50 text-emerald-800 border-emerald-100'
+              serverBackupMsg.includes('Lỗi') || serverBackupMsg.includes('❌') ? 'bg-red-50 text-red-700 border-red-100' : 'bg-emerald-50 text-emerald-800 border-emerald-100'
             }`}>
               {serverBackupMsg}
             </div>
@@ -526,17 +529,17 @@ export default function BackupRestoreTab({
             <table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className={`border-b text-gray-400 font-mono ${isDark ? 'bg-slate-900/60 border-slate-700/60' : 'bg-gray-50 border-gray-150'}`}>
-                  <th className="p-3">Tên File trên máy chủ</th>
-                  <th className="p-3">Thời điểm tạo</th>
-                  <th className="p-3 text-right">Kích thước file</th>
-                  <th className="p-3 text-center w-28">Hành động</th>
+                  <th className="p-3">{t("Tên File trên máy chủ")}</th>
+                  <th className="p-3">{t("Thời điểm tạo")}</th>
+                  <th className="p-3 text-right">{t("Kích thước file")}</th>
+                  <th className="p-3 text-center w-28">{t("Hành động")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100/20 font-mono">
                 {serverBackups.length === 0 ? (
                   <tr>
                     <td colSpan={4} className="p-6 text-center text-gray-400 font-sans italic">
-                      {loadingServerBackups ? 'Đang tải danh sách...' : 'Không có bản sao lưu nào trên máy chủ.'}
+                      {loadingServerBackups ? t('Đang tải danh sách...') : t('Không có bản sao lưu nào trên máy chủ.')}
                     </td>
                   </tr>
                 ) : (
@@ -560,7 +563,7 @@ export default function BackupRestoreTab({
                           className="px-2.5 py-1.5 bg-purple-500/10 hover:bg-purple-600 text-purple-500 hover:text-white rounded-lg text-xs font-sans font-bold transition-all flex items-center gap-1 mx-auto cursor-pointer"
                         >
                           <ArrowDownToLine className="w-3 h-3" />
-                          {isRestoringServer === backup.fileName ? 'Đang nạp...' : 'Nạp'}
+                          {isRestoringServer === backup.fileName ? t('Đang nạp...') : t('Nạp')}
                         </button>
                       </td>
                     </tr>

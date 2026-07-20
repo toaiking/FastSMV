@@ -10,8 +10,10 @@ import { defaultLibrary } from './defaultCoefficients';
 import { 
   Calculator, ListChecks, BookOpen, History, Shirt, Wifi, AlertTriangle, Loader2, Home, Sun, Moon, Sparkles, Database, Download 
 } from 'lucide-react';
+import { useLanguage } from './lib/LanguageContext';
 
 export default function App() {
+  const { language, setLanguage, t } = useLanguage();
   const [activeTab, setActiveTab] = useState<'home' | 'new_style' | 'styles_list' | 'coefficients' | 'history' | 'backup'>('home');
   
   // Theme State
@@ -234,8 +236,8 @@ export default function App() {
     return (
       <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-6 text-slate-100" id="app-loading">
         <Loader2 className="w-12 h-12 text-blue-500 animate-spin mb-4" />
-        <p className="text-sm font-semibold tracking-wide">Đang tải cơ sở dữ liệu SMV Estimator...</p>
-        <p className="text-xs text-slate-400 mt-1.5">Đồng bộ hóa thư viện hệ số và lịch sử rập...</p>
+        <p className="text-sm font-semibold tracking-wide">{t("Đang tải cơ sở dữ liệu SMV Estimator...")}</p>
+        <p className="text-xs text-slate-400 mt-1.5">{t("Đồng bộ hóa thư viện hệ số và lịch sử rập...")}</p>
       </div>
     );
   }
@@ -283,7 +285,7 @@ export default function App() {
                 : (isDark ? 'bg-emerald-950/40 border-emerald-800 text-emerald-400' : 'bg-emerald-50 border-emerald-100 text-emerald-700')
             }`}>
               <Wifi className="w-3 h-3" />
-              <span>{isLocalStorageMode ? 'Bộ nhớ Trình duyệt (Local)' : 'Đồng bộ Máy chủ (Server)'}</span>
+              <span>{isLocalStorageMode ? t('Bộ nhớ Trình duyệt (Local)') : t('Đồng bộ Máy chủ (Server)')}</span>
             </div>
 
             {library && (
@@ -291,6 +293,36 @@ export default function App() {
                 v{library.version}
               </div>
             )}
+
+            {/* Language Selector */}
+            <div className={`flex items-center rounded-lg p-0.5 border ${
+              isDark ? 'bg-slate-800 border-slate-700 text-slate-200' : 'bg-slate-100 border-gray-200 text-slate-700'
+            }`}>
+              <button
+                type="button"
+                onClick={() => setLanguage('vi')}
+                className={`px-1.5 py-1 text-[10px] font-bold rounded-md transition-all cursor-pointer ${
+                  language === 'vi'
+                    ? 'bg-blue-600 text-white shadow-xs'
+                    : (isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-800')
+                }`}
+                title="Tiếng Việt"
+              >
+                VI
+              </button>
+              <button
+                type="button"
+                onClick={() => setLanguage('en')}
+                className={`px-1.5 py-1 text-[10px] font-bold rounded-md transition-all cursor-pointer ${
+                  language === 'en'
+                    ? 'bg-blue-600 text-white shadow-xs'
+                    : (isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-800')
+                }`}
+                title="English"
+              >
+                EN
+              </button>
+            </div>
 
             {/* Light/Dark mode switcher */}
             <button
@@ -301,7 +333,7 @@ export default function App() {
                   ? 'bg-slate-800 border-slate-700 text-yellow-400 hover:bg-slate-700' 
                   : 'bg-slate-50 border-gray-200 text-slate-500 hover:bg-gray-100'
               }`}
-              title={isDark ? "Chế độ Sáng" : "Chế độ Tối"}
+              title={isDark ? t("Chế độ Sáng") : t("Chế độ Tối")}
             >
               {isDark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
             </button>
@@ -312,10 +344,10 @@ export default function App() {
                 type="button"
                 onClick={handleInstallClick}
                 className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-blue-500/30 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold cursor-pointer transition-all"
-                title="Cài đặt ứng dụng về máy"
+                title={t("Cài đặt ứng dụng về máy")}
               >
                 <Download className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline text-[10px]">Tải App</span>
+                <span className="hidden sm:inline text-[10px]">{t("Tải App")}</span>
               </button>
             )}
           </div>
@@ -342,7 +374,7 @@ export default function App() {
               }`}
             >
               <Home className="w-3.5 h-3.5" />
-              <span>Trang chủ</span>
+              <span>{t("Trang chủ")}</span>
             </button>
 
             <button
@@ -359,7 +391,7 @@ export default function App() {
               }`}
             >
               <Calculator className="w-3.5 h-3.5" />
-              <span>{editingStyle ? 'Sửa Style' : 'Tính SMV'}</span>
+              <span>{editingStyle ? t('Sửa Style') : t('Tính SMV')}</span>
             </button>
 
             <button
@@ -376,7 +408,7 @@ export default function App() {
               }`}
             >
               <ListChecks className="w-3.5 h-3.5" />
-              <span>Hồ sơ Style ({styles.length})</span>
+              <span>{t("Hồ sơ Style")} ({styles.length})</span>
             </button>
 
             <button
@@ -393,7 +425,7 @@ export default function App() {
               }`}
             >
               <BookOpen className="w-3.5 h-3.5" />
-              <span>Thư viện Hệ số</span>
+              <span>{t("Thư viện Hệ số")}</span>
             </button>
 
             <button
@@ -410,7 +442,7 @@ export default function App() {
               }`}
             >
               <History className="w-3.5 h-3.5" />
-              <span>Lịch sử ({history.length})</span>
+              <span>{t("Lịch sử")} ({history.length})</span>
             </button>
 
             <button
@@ -427,7 +459,7 @@ export default function App() {
               }`}
             >
               <Database className="w-3.5 h-3.5" />
-              <span>Đồng bộ & Sao lưu</span>
+              <span>{t("Đồng bộ & Sao lưu")}</span>
             </button>
           </div>
         </div>
@@ -451,7 +483,7 @@ export default function App() {
           }`}
         >
           <Home className="w-4.5 h-4.5" />
-          <span className="text-[8px] font-bold">Home</span>
+          <span className="text-[8px] font-bold">{t("Trang chủ")}</span>
         </button>
 
         {/* New Style (Calculator) tab button */}
@@ -467,7 +499,7 @@ export default function App() {
           }`}
         >
           <Calculator className="w-4.5 h-4.5" />
-          <span className="text-[8px] font-bold">{editingStyle ? 'Sửa' : 'Tính SMV'}</span>
+          <span className="text-[8px] font-bold">{editingStyle ? t('Sửa') : t('Tính SMV')}</span>
         </button>
 
         {/* Style List tab button */}
@@ -483,7 +515,7 @@ export default function App() {
           }`}
         >
           <ListChecks className="w-4.5 h-4.5" />
-          <span className="text-[8px] font-bold">Hồ sơ ({styles.length})</span>
+          <span className="text-[8px] font-bold">{t("Hồ sơ")} ({styles.length})</span>
         </button>
 
         {/* Coefficients Tab Button */}
@@ -499,7 +531,7 @@ export default function App() {
           }`}
         >
           <BookOpen className="w-4.5 h-4.5" />
-          <span className="text-[8px] font-bold">Thư viện</span>
+          <span className="text-[8px] font-bold">{t("Thư viện")}</span>
         </button>
 
         {/* Backup/Sync Tab Button */}
@@ -515,7 +547,7 @@ export default function App() {
           }`}
         >
           <Database className="w-4.5 h-4.5" />
-          <span className="text-[8px] font-bold">Sao lưu</span>
+          <span className="text-[8px] font-bold">{t("Sao lưu")}</span>
         </button>
       </nav>
 
@@ -526,13 +558,13 @@ export default function App() {
           <div className="mb-5 p-4 bg-red-50 text-red-800 rounded-xl border border-red-100 flex items-start gap-3">
             <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="font-bold text-sm">Lỗi đồng bộ dữ liệu hệ thống!</p>
+              <p className="font-bold text-sm">{t("Lỗi đồng bộ dữ liệu hệ thống!")}</p>
               <p className="text-xs text-red-600/90 mt-0.5">{error}</p>
               <button 
                 onClick={loadAllData} 
                 className="mt-2 text-xs font-bold text-red-800 hover:underline cursor-pointer bg-red-100 px-2 py-1 rounded"
               >
-                Tải lại trang ngay
+                {t("Tải lại trang ngay")}
               </button>
             </div>
           </div>
@@ -607,9 +639,9 @@ export default function App() {
         isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'
       }`} id="app-footer">
         <div className="max-w-7xl mx-auto px-4">
-          <p>© 2026 SMV Estimator — Giải pháp chuyển đổi số thông minh cho ngành may mặc.</p>
+          <p>© 2026 SMV Estimator — {t("Giải pháp chuyển đổi số thông minh cho ngành may mặc.")}</p>
           <p className="mt-1">
-            Thiết kế kiến trúc Module hóa tách biệt logic kinh nghiệm và giao diện • Sai số định biên chấp nhận ±20–25%
+            {t("Thiết kế kiến trúc Module hóa tách biệt logic kinh nghiệm và giao diện • Sai số định biên chấp nhận ±20–25%")}
           </p>
         </div>
       </footer>
