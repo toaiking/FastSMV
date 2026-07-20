@@ -36,6 +36,9 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Logo error state
+  const [logoError, setLogoError] = useState<boolean>(false);
+
   // PWA Install Prompt Handler
   useEffect(() => {
     const handleBeforeInstall = (e: Event) => {
@@ -250,12 +253,19 @@ export default function App() {
           
           {/* Logo & title */}
           <div className="flex items-center gap-2">
-            <img 
-              src="/logo.jpg" 
-              alt="Logo" 
-              className="w-7 h-7 rounded-lg object-cover shadow-sm flex-shrink-0 border border-blue-500/30"
-              referrerPolicy="no-referrer"
-            />
+            {logoError ? (
+              <div className="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center text-white font-black text-[10px] tracking-tight shadow-sm flex-shrink-0 border border-blue-500/30">
+                SMV
+              </div>
+            ) : (
+              <img 
+                src="/logo.jpg" 
+                alt="Logo" 
+                className="w-7 h-7 rounded-lg object-cover shadow-sm flex-shrink-0 border border-blue-500/30"
+                referrerPolicy="no-referrer"
+                onError={() => setLogoError(true)}
+              />
+            )}
             <div>
               <div className="flex items-center gap-1.5">
                 <h1 className="text-sm font-black tracking-tight font-sans">SMV Estimator</h1>
