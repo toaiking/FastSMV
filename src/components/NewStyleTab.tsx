@@ -12,6 +12,7 @@ interface NewStyleTabProps {
   onSaveSuccess: () => void;
   onCancelEdit: () => void;
   isDark?: boolean;
+  isLocalStorageMode?: boolean;
 }
 
 // Preset patterns for simulated camera capture
@@ -51,7 +52,8 @@ export default function NewStyleTab({
   editingStyle,
   onSaveSuccess,
   onCancelEdit,
-  isDark = false
+  isDark = false,
+  isLocalStorageMode = false
 }: NewStyleTabProps) {
   // Form States
   const [styleCode, setStyleCode] = useState('');
@@ -402,6 +404,51 @@ export default function NewStyleTab({
     };
 
     setIsSaving(true);
+
+    if (isLocalStorageMode) {
+      try {
+        const localStylesStr = localStorage.getItem('smv_styles') || '[]';
+        const localStyles = JSON.parse(localStylesStr) as Style[];
+
+        if (editingStyle) {
+          const idx = localStyles.findIndex(s => s.id === editingStyle.id);
+          if (idx !== -1) {
+            localStyles[idx] = { ...payload, updatedAt: new Date().toISOString() };
+          } else {
+            localStyles.unshift(payload);
+          }
+        } else {
+          // Check if style code already exists
+          const existing = localStyles.some(s => s.styleCode.toLowerCase() === payload.styleCode.toLowerCase());
+          if (existing) {
+            throw new Error(`Mã hàng "${payload.styleCode}" đã tồn tại trong danh sách.`);
+          }
+          localStyles.unshift(payload);
+        }
+
+        localStorage.setItem('smv_styles', JSON.stringify(localStyles));
+        setSuccessMsg(editingStyle ? 'Cập nhật Style thành công (Lưu trên thiết bị)!' : 'Lưu Style mới thành công (Lưu trên thiết bị)!');
+
+        if (!editingStyle) {
+          setStyleCode('');
+          setStyleName('');
+          setCustomer('');
+          setPartsCount(10);
+          setNotes('');
+          setPatternImage('');
+        }
+
+        setTimeout(() => {
+          onSaveSuccess();
+        }, 1000);
+
+      } catch (err: any) {
+        setErrorMsg(err.message || 'Lỗi khi lưu Style.');
+      } finally {
+        setIsSaving(false);
+      }
+      return;
+    }
 
     try {
       const url = editingStyle ? `/api/styles/${editingStyle.id}` : '/api/styles';

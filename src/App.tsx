@@ -5,6 +5,7 @@ import NewStyleTab from './components/NewStyleTab';
 import StyleListTab from './components/StyleListTab';
 import CoefficientLibraryTab from './components/CoefficientLibraryTab';
 import HistoryTab from './components/HistoryTab';
+import { defaultLibrary } from './defaultCoefficients';
 import { 
   Calculator, ListChecks, BookOpen, History, Shirt, Wifi, AlertTriangle, Loader2, Home, Sun, Moon, Sparkles 
 } from 'lucide-react';
@@ -21,6 +22,7 @@ export default function App() {
   const [library, setLibrary] = useState<CoefficientLibrary | null>(null);
   const [styles, setStyles] = useState<Style[]>([]);
   const [history, setHistory] = useState<CoefficientHistory[]>([]);
+  const [isLocalStorageMode, setIsLocalStorageMode] = useState<boolean>(false);
   
   // Editing active state
   const [editingStyle, setEditingStyle] = useState<Style | null>(null);
@@ -54,10 +56,54 @@ export default function App() {
       setLibrary(coefData);
       setStyles(stylesData);
       setHistory(historyData);
+      setIsLocalStorageMode(false);
       setError(null);
     } catch (err: any) {
-      console.error('Data load error:', err);
-      setError('Không thể kết nối đến máy chủ lưu trữ. Vui lòng kiểm tra lại kết nối mạng hoặc tiến trình server.');
+      console.warn('Cannot connect to host server. Gracefully falling back to browser LocalStorage.', err);
+      
+      // Fallback to localStorage and load/initialize local copies
+      let localCoef = localStorage.getItem('smv_coefficients');
+      let localStyles = localStorage.getItem('smv_styles');
+      let localHistory = localStorage.getItem('smv_history');
+
+      let coefData: CoefficientLibrary;
+      if (localCoef) {
+        coefData = JSON.parse(localCoef);
+      } else {
+        coefData = defaultLibrary;
+        localStorage.setItem('smv_coefficients', JSON.stringify(defaultLibrary));
+      }
+
+      let stylesData: Style[];
+      if (localStyles) {
+        stylesData = JSON.parse(localStyles);
+      } else {
+        stylesData = [];
+        localStorage.setItem('smv_styles', JSON.stringify([]));
+      }
+
+      let historyData: CoefficientHistory[];
+      if (localHistory) {
+        historyData = JSON.parse(localHistory);
+      } else {
+        historyData = [
+          {
+            id: 'hist-init-local',
+            timestamp: new Date().toISOString(),
+            versionBefore: 0,
+            versionAfter: 1,
+            action: 'Khởi tạo Offline',
+            details: 'Khởi tạo thư viện hệ số mẫu thành công trên Trình duyệt (Chế độ thiết bị).'
+          }
+        ];
+        localStorage.setItem('smv_history', JSON.stringify(historyData));
+      }
+
+      setLibrary(coefData);
+      setStyles(stylesData);
+      setHistory(historyData);
+      setIsLocalStorageMode(true);
+      setError(null); // Clear server connection error so app remains fully operational
     } finally {
       setLoading(false);
     }
@@ -69,7 +115,17 @@ export default function App() {
 
   // Delete a Style
   const handleDeleteStyle = async (id: string) => {
+    if (isLocalStorageMode) {
+      if (confirm('Bạn có chắc chắn muốn xoá Style này?')) {
+        const updated = styles.filter(s => s.id !== id);
+        setStyles(updated);
+        localStorage.setItem('smv_styles', JSON.stringify(updated));
+      }
+      return;
+    }
+
     try {
+      if (!confirm('Bạn có chắc chắn muốn xoá Style này?')) return;
       const response = await fetch(`/api/styles/${id}`, {
         method: 'DELETE'
       });
@@ -142,11 +198,13 @@ export default function App() {
           {/* Status info bar & Theme Switcher */}
           <div className="flex items-center gap-2.5 text-xs">
             {/* Sync indicators */}
-            <div className={`items-center gap-1 font-semibold px-2 py-0.5 rounded-md border text-[10px] hidden sm:flex ${
-              isDark ? 'bg-slate-800 border-slate-700 text-emerald-400' : 'bg-emerald-50 border-emerald-100 text-emerald-600'
+            <div className={`items-center gap-1 font-semibold px-2 py-0.5 rounded-md border text-[10px] flex ${
+              isLocalStorageMode
+                ? (isDark ? 'bg-amber-950/40 border-amber-800 text-amber-400' : 'bg-amber-50 border-amber-100 text-amber-700')
+                : (isDark ? 'bg-emerald-950/40 border-emerald-800 text-emerald-400' : 'bg-emerald-50 border-emerald-100 text-emerald-700')
             }`}>
               <Wifi className="w-3 h-3" />
-              <span>Offline</span>
+              <span>{isLocalStorageMode ? 'Bộ nhớ Trình duyệt (Local)' : 'Đồng bộ Máy chủ (Server)'}</span>
             </div>
 
             {library && (
@@ -391,6 +449,7 @@ export default function App() {
                 onSaveSuccess={handleSaveSuccess}
                 onCancelEdit={handleCancelEdit}
                 isDark={isDark}
+                isLocalStorageMode={isLocalStorageMode}
               />
             )}
 
@@ -408,6 +467,7 @@ export default function App() {
                 library={library}
                 onLibraryUpdate={loadAllData}
                 isDark={isDark}
+                isLocalStorageMode={isLocalStorageMode}
               />
             )}
 

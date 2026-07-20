@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { CoefficientLibrary, Coefficient, PartTier, CoefficientCategory } from '../types';
+import { CoefficientLibrary, Coefficient, PartTier, CoefficientCategory, CoefficientHistory } from '../types';
 import { 
-  Plus, Trash2, Save, Undo, Archive, CheckCircle, AlertCircle, FileJson, ArrowDownToLine, RefreshCw, Layers 
+  Plus, Trash2, Save, Undo, Archive, CheckCircle, AlertCircle, FileJson, ArrowDownToLine, RefreshCw, Layers, Upload
 } from 'lucide-react';
 
 interface CoefficientLibraryTabProps {
   library: CoefficientLibrary;
   onLibraryUpdate: () => void;
   isDark?: boolean;
+  isLocalStorageMode?: boolean;
 }
 
 interface BackupFile {
@@ -19,7 +20,8 @@ interface BackupFile {
 export default function CoefficientLibraryTab({
   library,
   onLibraryUpdate,
-  isDark = false
+  isDark = false,
+  isLocalStorageMode = false
 }: CoefficientLibraryTabProps) {
   // Local editable copy of the library
   const [localCoefficients, setLocalCoefficients] = useState<Coefficient[]>([]);
@@ -192,6 +194,49 @@ export default function CoefficientLibraryTab({
     setIsSaving(true);
     setSaveError('');
 
+    if (isLocalStorageMode) {
+      try {
+        const nextVersion = library.version + 1;
+        const updatedLibrary: CoefficientLibrary = {
+          version: nextVersion,
+          updatedAt: new Date().toISOString(),
+          coefficients: localCoefficients,
+          partTiers: localPartTiers
+        };
+
+        localStorage.setItem('smv_coefficients', JSON.stringify(updatedLibrary));
+
+        // Add history item to localStorage
+        const localHistoryStr = localStorage.getItem('smv_history') || '[]';
+        const localHistory = JSON.parse(localHistoryStr) as CoefficientHistory[];
+        const newHistoryItem: CoefficientHistory = {
+          id: `hist-${Date.now()}`,
+          timestamp: new Date().toISOString(),
+          versionBefore: library.version,
+          versionAfter: nextVersion,
+          action: 'Cập nhật hệ số',
+          details: changeDescription.trim() || `Cập nhật thư viện hệ số (Lưu trên thiết bị) lên phiên bản ${nextVersion}`
+        };
+
+        localHistory.unshift(newHistoryItem);
+        localStorage.setItem('smv_history', JSON.stringify(localHistory));
+
+        setSaveSuccess('Cập nhật hệ số thành công (Lưu trên thiết bị)!');
+        setHasChanges(false);
+
+        setTimeout(() => {
+          setShowSaveModal(false);
+          onLibraryUpdate();
+        }, 1000);
+
+      } catch (err: any) {
+        setSaveError(err.message || 'Lỗi lưu cục bộ.');
+      } finally {
+        setIsSaving(false);
+      }
+      return;
+    }
+
     try {
       const response = await fetch('/api/coefficients', {
         method: 'POST',
@@ -227,6 +272,29 @@ export default function CoefficientLibraryTab({
   const handleCreateBackup = async () => {
     setIsBackingUp(true);
     setBackupMsg('');
+
+    if (isLocalStorageMode) {
+      try {
+        const dataStr = JSON.stringify(library, null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `smv_coefficients_v${library.version}_backup_${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        setBackupMsg(`✅ Đã tải file backup (.json) về thiết bị thành công!`);
+      } catch (err: any) {
+        setBackupMsg(`❌ Lỗi tải backup: ${err.message}`);
+      } finally {
+        setIsBackingUp(false);
+      }
+      return;
+    }
+
     try {
       const response = await fetch('/api/coefficients/backup', { method: 'POST' });
       const result = await response.json();
@@ -241,6 +309,49 @@ export default function CoefficientLibraryTab({
     } finally {
       setIsBackingUp(false);
     }
+  };
+
+  const handleLocalRestoreUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const content = e.target?.result as string;
+        const parsed = JSON.parse(content) as CoefficientLibrary;
+
+        if (!parsed.version || !parsed.coefficients || !parsed.partTiers) {
+          throw new Error('Định dạng file sao lưu không hợp lệ. Phải chứa đầy đủ phiên bản và hằng số.');
+        }
+
+        if (confirm(`Bạn có chắc chắn muốn khôi phục thư viện hệ số về phiên bản v${parsed.version} từ file "${file.name}"? Dữ liệu hiện tại sẽ bị ghi đè hoàn toàn.`)) {
+          // Backup current in history
+          const localHistoryStr = localStorage.getItem('smv_history') || '[]';
+          const localHistory = JSON.parse(localHistoryStr) as CoefficientHistory[];
+          const restoreHistoryItem: CoefficientHistory = {
+            id: `hist-restore-${Date.now()}`,
+            timestamp: new Date().toISOString(),
+            versionBefore: library.version,
+            versionAfter: parsed.version,
+            action: 'Khôi phục hệ số',
+            details: `Khôi phục thư viện hệ số về phiên bản ${parsed.version} từ file: ${file.name}`
+          };
+          localHistory.unshift(restoreHistoryItem);
+          
+          localStorage.setItem('smv_coefficients', JSON.stringify(parsed));
+          localStorage.setItem('smv_history', JSON.stringify(localHistory));
+
+          alert(`Khôi phục thư viện hệ số về phiên bản v${parsed.version} thành công!`);
+          onLibraryUpdate();
+        }
+      } catch (err: any) {
+        alert(`Không thể đọc file sao lưu: ${err.message}`);
+      }
+    };
+    reader.readAsText(file);
+    // Reset file input
+    event.target.value = '';
   };
 
   const handleRestoreBackup = async (fileName: string) => {
@@ -571,26 +682,74 @@ export default function CoefficientLibraryTab({
       {/* SUBTAB: Backup and Restore */}
       {subTab === 'backups' && (
         <div className="flex flex-col gap-5" id="backups-manager">
-          <div className={`p-4 rounded-xl border flex flex-col md:flex-row items-start md:items-center justify-between gap-4 ${
-            isDark ? 'bg-slate-900 border-slate-750' : 'bg-slate-50 border-gray-200'
-          }`}>
-            <div>
-              <h3 className="text-xs font-bold flex items-center gap-1.5">
-                <Archive className="w-4 h-4 text-blue-500" /> Sao lưu thủ công tức thì
-              </h3>
-              <p className="text-[11px] text-gray-400 mt-1">
-                Tạo một bản sao lưu an toàn của thư viện hệ số hiện tại trên server.
-              </p>
+          {isLocalStorageMode ? (
+            <>
+              <div className={`p-4 rounded-xl border flex flex-col md:flex-row items-start md:items-center justify-between gap-4 ${
+                isDark ? 'bg-slate-900 border-slate-750' : 'bg-slate-50 border-gray-200'
+              }`}>
+                <div>
+                  <h3 className="text-xs font-bold flex items-center gap-1.5">
+                    <Archive className="w-4 h-4 text-blue-500" /> Tải file Sao lưu (.json)
+                  </h3>
+                  <p className="text-[11px] text-gray-400 mt-1">
+                    Tải về máy tính một bản sao lưu cứng (.json) chứa toàn bộ cấu hình hệ số hiện tại của bạn.
+                  </p>
+                </div>
+                <button
+                  onClick={handleCreateBackup}
+                  disabled={isBackingUp}
+                  className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-500 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm active:scale-95 transition-all cursor-pointer whitespace-nowrap"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${isBackingUp ? 'animate-spin' : ''}`} />
+                  {isBackingUp ? 'Đang tạo...' : '💽 Tải xuống Sao lưu (.json)'}
+                </button>
+              </div>
+
+              <div className={`p-4 rounded-xl border flex flex-col md:flex-row items-start md:items-center justify-between gap-4 ${
+                isDark ? 'bg-slate-900 border-slate-750' : 'bg-slate-50 border-gray-200'
+              }`}>
+                <div>
+                  <h3 className="text-xs font-bold flex items-center gap-1.5">
+                    <Upload className="w-4 h-4 text-emerald-500" /> Khôi phục từ File (.json)
+                  </h3>
+                  <p className="text-[11px] text-gray-400 mt-1">
+                    Chọn file sao lưu `.json` đã tải trước đó từ thiết bị của bạn để khôi phục cấu hình hệ số.
+                  </p>
+                </div>
+                <label className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm active:scale-95 transition-all cursor-pointer whitespace-nowrap">
+                  <Upload className="w-3.5 h-3.5" />
+                  <span>Nạp file Sao lưu</span>
+                  <input
+                    type="file"
+                    accept=".json"
+                    onChange={handleLocalRestoreUpload}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+            </>
+          ) : (
+            <div className={`p-4 rounded-xl border flex flex-col md:flex-row items-start md:items-center justify-between gap-4 ${
+              isDark ? 'bg-slate-900 border-slate-750' : 'bg-slate-50 border-gray-200'
+            }`}>
+              <div>
+                <h3 className="text-xs font-bold flex items-center gap-1.5">
+                  <Archive className="w-4 h-4 text-blue-500" /> Sao lưu thủ công tức thì
+                </h3>
+                <p className="text-[11px] text-gray-400 mt-1">
+                  Tạo một bản sao lưu an toàn của thư viện hệ số hiện tại trên server.
+                </p>
+              </div>
+              <button
+                onClick={handleCreateBackup}
+                disabled={isBackingUp}
+                className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-500 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm active:scale-95 transition-all cursor-pointer"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isBackingUp ? 'animate-spin' : ''}`} />
+                {isBackingUp ? 'Đang tạo backup...' : '💽 Sao lưu rập mẫu'}
+              </button>
             </div>
-            <button
-              onClick={handleCreateBackup}
-              disabled={isBackingUp}
-              className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-500 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm active:scale-95 transition-all cursor-pointer"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${isBackingUp ? 'animate-spin' : ''}`} />
-              {isBackingUp ? 'Đang tạo backup...' : '💽 Sao lưu rập mẫu'}
-            </button>
-          </div>
+          )}
 
           {backupMsg && (
             <div className={`p-3 text-xs font-bold rounded-lg border ${
