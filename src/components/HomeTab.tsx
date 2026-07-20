@@ -237,7 +237,7 @@ export default function HomeTab({
                         <span className={`px-1.5 py-0.2 text-[9px] rounded font-semibold truncate ${
                           isDark ? 'bg-slate-700 text-gray-300' : 'bg-gray-100 text-gray-600'
                         }`}>
-                          {style.customer || 'No Customer'}
+                          {style.customer || t('Không có khách hàng')}
                         </span>
                       </div>
                       <p className="text-[10px] text-gray-400 truncate mt-0.5">{style.styleName}</p>

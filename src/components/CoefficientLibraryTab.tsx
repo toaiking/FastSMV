@@ -194,7 +194,7 @@ export default function CoefficientLibraryTab({
 
   const handleConfirmSave = async () => {
     if (!changeDescription.trim()) {
-      setSaveError('Vui lòng nhập lý do/mô tả thay đổi để ghi nhận lịch sử.');
+      setSaveError(t('Vui lòng nhập lý do/mô tả thay đổi để ghi nhận lịch sử.'));
       return;
     }
 

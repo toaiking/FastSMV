@@ -5,6 +5,11 @@
 
 import * as XLSX from 'xlsx';
 import { Style } from '../types';
+import { getTranslation } from '../lib/translations';
+
+// Helper to get active language and translate
+const getLang = () => (localStorage.getItem('smv_language') as 'vi' | 'en') || 'vi';
+const t = (text: string) => getTranslation(text, getLang());
 
 // Helper to format date
 const formatDate = (isoString: string) => {
@@ -21,22 +26,22 @@ const formatDate = (isoString: string) => {
  */
 export function exportAllStylesToExcel(styles: Style[]) {
   const headers = [
-    'Mã hàng',
-    'Tên Style',
-    'Khách hàng',
-    'Tổng chu vi rập (cm)',
-    'Phương thức Base SMV',
-    'Định mức phút/cm',
-    'Base SMV (phút)',
-    'Hệ số Loại sản phẩm',
-    'Hệ số Độ phức tạp',
-    'Hệ số Bậc chu vi rập',
-    'Hệ số Kinh nghiệm',
-    'Hệ số Bù hao (Allowance %)',
-    'SMV Cuối cùng (phút)',
-    'Người ước lượng',
-    'Ngày tạo',
-    'Ghi chú'
+    t('Mã hàng'),
+    t('Tên Style'),
+    t('Khách hàng'),
+    t('Tổng chu vi rập (cm)'),
+    t('Phương thức Base SMV'),
+    t('Định mức phút/cm'),
+    t('Base SMV (phút)'),
+    t('Hệ số Loại sản phẩm'),
+    t('Hệ số Độ phức tạp'),
+    t('Hệ số Bậc chu vi rập'),
+    t('Hệ số Kinh nghiệm'),
+    t('Hệ số Bù hao (Allowance %)'),
+    t('SMV Cuối cùng (phút)'),
+    t('Người ước lượng'),
+    t('Ngày tạo'),
+    t('Ghi chú')
   ];
 
   const data = styles.map(style => {
@@ -46,14 +51,14 @@ export function exportAllStylesToExcel(styles: Style[]) {
       style.styleName,
       style.customer,
       style.patternPerimeterCm,
-      style.baseSmvMethod === 'auto' ? 'Tính tự động' : 'Nhập thủ công',
+      style.baseSmvMethod === 'auto' ? t('Tính tự động') : t('Nhập thủ công'),
       style.baseSmvMethod === 'auto' ? style.perimeterSmvRate : '-',
       style.baseSmv,
-      `${calc.productTypeName} (${calc.productTypeVal})`,
-      `${calc.complexityName} (${calc.complexityVal})`,
-      `${calc.perimeterTierName} (${calc.perimeterFactor})`,
-      `${calc.experienceName} (${calc.experienceVal})`,
-      `${calc.allowanceName} (${(calc.allowanceVal * 100).toFixed(0)}%)`,
+      `${t(calc.productTypeName)} (${calc.productTypeVal})`,
+      `${t(calc.complexityName)} (${calc.complexityVal})`,
+      `${t(calc.perimeterTierName)} (${calc.perimeterFactor})`,
+      `${t(calc.experienceName)} (${calc.experienceVal})`,
+      `${t(calc.allowanceName)} (${(calc.allowanceVal * 100).toFixed(0)}%)`,
       calc.finalSmv,
       style.estimator,
       formatDate(style.createdAt),
@@ -84,7 +89,7 @@ export function exportAllStylesToExcel(styles: Style[]) {
   ];
 
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Danh sách Style SMV');
+  XLSX.utils.book_append_sheet(wb, ws, t('Danh sách Style SMV'));
 
   // Generate file and trigger download
   XLSX.writeFile(wb, `Danh_Sach_Style_SMV_${new Date().toISOString().slice(0,10)}.xlsx`);
@@ -97,60 +102,60 @@ export function exportSingleStyleToExcel(style: Style) {
   const calc = style.calculationDetails;
 
   const rows = [
-    ['BÁO CÁO CHI TIẾT ƯỚC LƯỢNG SMV (SEWING MINUTE VALUE)'],
+    [t('BÁO CÁO CHI TIẾT ƯỚC LƯỢNG SMV (SEWING MINUTE VALUE)')],
     [],
-    ['I. THÔNG TIN CHUNG SẢN PHẨM'],
-    ['Mã hàng (Style Code):', style.styleCode, '', 'Tên sản phẩm (Style Name):', style.styleName],
-    ['Khách hàng (Customer):', style.customer, '', 'Người ước lượng:', style.estimator],
-    ['Ngày ước lượng:', formatDate(style.createdAt), '', 'Tổng chu vi rập (cm):', style.patternPerimeterCm],
-    ['Ghi chú:', style.notes || 'Không có ghi chú'],
+    [t('I. THÔNG TIN CHUNG SẢN PHẨM')],
+    [t('Mã hàng (Style Code):'), style.styleCode, '', t('Tên sản phẩm (Style Name):'), style.styleName],
+    [t('Khách hàng (Customer):'), style.customer, '', t('Người ước lượng:'), style.estimator],
+    [t('Ngày ước lượng:'), formatDate(style.createdAt), '', t('Tổng chu vi rập (cm):'), style.patternPerimeterCm],
+    [t('Ghi chú:'), style.notes || t('Không có ghi chú')],
     [],
-    ['II. DIỄN GIẢI CÔNG THỨC & HỆ SỐ ÁP DỤNG'],
-    ['Công thức:', 'SMV Cuối cùng = Base SMV x Hệ số Sản Phẩm x Hệ số Độ Phức Tạp x Hệ số Bậc Chu Vi Rập x Hệ số Kinh Nghiệm x (1 + % Allowance)'],
+    [t('II. DIỄN GIẢI CÔNG THỨC & HỆ SỐ ÁP DỤNG')],
+    [t('Công thức:'), t('SMV Cuối cùng = Base SMV x Hệ số Sản Phẩm x Hệ số Độ Phức Tạp x Hệ số Bậc Chu Vi Rập x Hệ số Kinh Nghiệm x (1 + % Allowance)')],
     [],
-    ['Hạng mục yếu tố', 'Tên hệ số đã chọn', 'Giá trị áp dụng', 'Diễn giải ý nghĩa'],
+    [t('Hạng mục yếu tố'), t('Tên hệ số đã chọn'), t('Giá trị áp dụng'), t('Diễn giải ý nghĩa')],
     [
-      '1. Base SMV (Thời gian nền)',
-      style.baseSmvMethod === 'auto' ? `Tự động (Chu vi rập x ${style.perimeterSmvRate} phút/cm)` : 'Nhập thủ công theo kinh nghiệm',
+      `1. ${t('Base SMV (Thời gian nền)')}`,
+      style.baseSmvMethod === 'auto' ? `${t('Tự động')} (${t('Chu vi rập')} x ${style.perimeterSmvRate} ${t('phút/cm')})` : t('Nhập thủ công theo kinh nghiệm'),
       style.baseSmv,
-      'Thời gian sản xuất cơ sở trước khi nhân các hệ số hiệu chỉnh'
+      t('Thời gian sản xuất cơ sở trước khi nhân các hệ số hiệu chỉnh')
     ],
     [
-      '2. Loại sản phẩm (Product Type)',
-      calc.productTypeName,
+      `2. ${t('Loại sản phẩm (Product Type)')}`,
+      t(calc.productTypeName),
       calc.productTypeVal,
-      'Hệ số điều chỉnh theo đặc thù kỹ thuật của từng dòng sản phẩm'
+      t('Hệ số điều chỉnh theo đặc thù kỹ thuật của từng dòng sản phẩm')
     ],
     [
-      '3. Độ phức tạp (Complexity)',
-      calc.complexityName,
+      `3. ${t('Độ phức tạp (Complexity)')}`,
+      t(calc.complexityName),
       calc.complexityVal,
-      'Hệ số phản ánh độ khó đường may, ráp nối của hàng'
+      t('Hệ số phản ánh độ khó đường may, ráp nối của hàng')
     ],
     [
-      '4. Bậc chu vi rập (Perimeter Tier)',
-      calc.perimeterTierName,
+      `4. ${t('Bậc chu vi rập (Perimeter Tier)')}`,
+      t(calc.perimeterTierName),
       calc.perimeterFactor,
-      'Hệ số tỷ lệ thuận theo tổng chiều dài chu vi các chi tiết rập'
+      t('Hệ số tỷ lệ thuận theo tổng chiều dài chu vi các chi tiết rập')
     ],
     [
-      '5. Kinh nghiệm may (Experience)',
-      calc.experienceName,
+      `5. ${t('Kinh nghiệm may (Experience)')}`,
+      t(calc.experienceName),
       calc.experienceVal,
-      'Hệ số điều chỉnh theo tay nghề và mức độ quen tay của chuyền may'
+      t('Hệ số điều chỉnh theo tay nghề và mức độ quen tay của chuyền may')
     ],
     [
-      '6. Bù hao hao phí (Allowance)',
-      calc.allowanceName,
+      `6. ${t('Bù hao hao phí (Allowance)')}`,
+      t(calc.allowanceName),
       `${(calc.allowanceVal * 100).toFixed(0)}%`,
-      'Hệ số bù hao thời gian nghỉ ngơi, mệt mỏi, thao tác phụ trợ (Allowance)'
+      t('Hệ số bù hao thời gian nghỉ ngơi, mệt mỏi, thao tác phụ trợ (Allowance)')
     ],
     [],
-    ['III. KẾT QUẢ TỔNG HỢP'],
-    ['Tổng thời gian ước lượng (SMV):', `${calc.finalSmv.toFixed(3)} phút`, '', 'Phiên bản thư viện hệ số:', `v${calc.libraryVersion}`],
+    [t('III. KẾT QUẢ TỔNG HỢP')],
+    [t('Tổng thời gian ước lượng (SMV):'), `${calc.finalSmv.toFixed(3)} ${t('phút')}`, '', t('Phiên bản thư viện hệ số:'), `v${calc.libraryVersion}`],
     [],
-    ['Xác nhận của Người Ước Lượng', '', '', 'Xác nhận của Quản Lý/Duyệt'],
-    ['(Ký & ghi rõ họ tên)', '', '', '(Ký & ghi rõ họ tên)'],
+    [t('Xác nhận của Người Ước Lượng'), '', '', t('Xác nhận của Quản Lý/Duyệt')],
+    [t('(Ký & ghi rõ họ tên)'), '', '', t('(Ký & ghi rõ họ tên)')],
   ];
 
   const ws = XLSX.utils.aoa_to_sheet(rows);

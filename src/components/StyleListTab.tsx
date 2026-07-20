@@ -93,7 +93,7 @@ export default function StyleListTab({
 
   const handleDeleteClick = (e: React.MouseEvent, style: Style) => {
     e.stopPropagation(); // prevent expanding row
-    if (confirm(`Bạn có chắc chắn muốn xoá Style "${style.styleCode} - ${style.styleName}" không? Thao tác này không thể khôi phục!`)) {
+    if (confirm(t('Bạn có chắc chắn muốn xoá Style này?'))) {
       onDeleteStyle(style.id);
     }
   };
@@ -157,7 +157,7 @@ export default function StyleListTab({
             >
               <option value="">{t("-- Tất cả loại --")}</option>
               {uniqueProductTypes.map(tVal => (
-                <option key={tVal} value={tVal}>{tVal}</option>
+                <option key={tVal} value={tVal}>{tVal ? t(tVal) : ""}</option>
               ))}
             </select>
           </div>
@@ -172,7 +172,7 @@ export default function StyleListTab({
             >
               <option value="">{t("-- Tất cả độ khó --")}</option>
               {uniqueComplexities.map(cVal => (
-                <option key={cVal} value={cVal}>{cVal}</option>
+                <option key={cVal} value={cVal}>{cVal ? t(cVal) : ""}</option>
               ))}
             </select>
           </div>
@@ -268,7 +268,7 @@ export default function StyleListTab({
                 {/* Collapse toggle row */}
                 <div className="flex justify-between items-center">
                   <span className="text-[10px] text-gray-400 font-bold">
-                    ⚙️ {calc?.productTypeName || 'Áo'} • {calc?.complexityName || 'Trung bình'}
+                    ⚙️ {calc?.productTypeName ? t(calc.productTypeName) : t('Áo')} • {calc?.complexityName ? t(calc.complexityName) : t('Trung bình')}
                   </span>
                   <span className="text-xs font-bold text-blue-600 flex items-center gap-0.5">
                     {isExpanded ? (
@@ -320,11 +320,11 @@ export default function StyleListTab({
                       </div>
                       <div className="flex justify-between border-b border-gray-200/50 pb-1">
                         <span>👕 {t("Hệ số sản phẩm:")}</span>
-                        <span className="text-gray-900">{calc?.productTypeName} (x{calc?.productTypeVal.toFixed(2)})</span>
+                        <span className="text-gray-900">{calc?.productTypeName ? t(calc.productTypeName) : ''} (x{calc?.productTypeVal.toFixed(2)})</span>
                       </div>
                       <div className="flex justify-between border-b border-gray-200/50 pb-1">
                         <span>⚙️ {t("Hệ số độ phức tạp:")}</span>
-                        <span className="text-gray-900">{calc?.complexityName} (x{calc?.complexityVal.toFixed(2)})</span>
+                        <span className="text-gray-900">{calc?.complexityName ? t(calc.complexityName) : ''} (x{calc?.complexityVal.toFixed(2)})</span>
                       </div>
                       <div className="flex justify-between border-b border-gray-200/50 pb-1">
                         <span>📏 {t("Hệ số bậc chu vi rập:")}</span>
@@ -332,7 +332,7 @@ export default function StyleListTab({
                       </div>
                       <div className="flex justify-between border-b border-gray-200/50 pb-1">
                         <span>👤 {t("Hệ số tay nghề:")}</span>
-                        <span className="text-gray-900">{calc?.experienceName} (x{calc?.experienceVal.toFixed(2)})</span>
+                        <span className="text-gray-900">{calc?.experienceName ? t(calc.experienceName) : ''} (x{calc?.experienceVal.toFixed(2)})</span>
                       </div>
                       <div className="flex justify-between">
                         <span>🔋 {t("Hệ số bù hao:")}</span>

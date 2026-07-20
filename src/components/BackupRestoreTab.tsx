@@ -221,7 +221,7 @@ export default function BackupRestoreTab({
         versionBefore: library.version,
         versionAfter: finalLibrary.version,
         action: 'Nạp bản sao lưu',
-        details: `Đã khôi phục toàn bộ hệ thống từ file "${selectedFile?.name || 'backup'}". Đã nạp ${finalStyles.length} styles.`
+        details: `${t('Đã khôi phục toàn bộ hệ thống từ file')} "${selectedFile?.name || 'backup'}". ${t('Đã nạp')} ${finalStyles.length} styles.`
       };
       finalHistory.unshift(restoreLog);
 

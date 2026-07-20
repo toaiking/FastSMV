@@ -187,7 +187,7 @@ export default function App() {
   // Delete a Style
   const handleDeleteStyle = async (id: string) => {
     if (isLocalStorageMode) {
-      if (confirm('Bạn có chắc chắn muốn xoá Style này?')) {
+      if (confirm(t('Bạn có chắc chắn muốn xoá Style này?'))) {
         const updated = styles.filter(s => s.id !== id);
         setStyles(updated);
         localStorage.setItem('smv_styles', JSON.stringify(updated));
@@ -196,7 +196,7 @@ export default function App() {
     }
 
     try {
-      if (!confirm('Bạn có chắc chắn muốn xoá Style này?')) return;
+      if (!confirm(t('Bạn có chắc chắn muốn xoá Style này?'))) return;
       const response = await fetch(`/api/styles/${id}`, {
         method: 'DELETE'
       });
@@ -207,10 +207,10 @@ export default function App() {
         loadAllData();
       } else {
         const result = await response.json();
-        alert(result.error || 'Lỗi khi xoá Style.');
+        alert(result.error || t('Lỗi khi xoá Style.'));
       }
     } catch (err: any) {
-      alert('Không thể kết nối máy chủ để thực hiện xoá.');
+      alert(t('Không thể kết nối máy chủ để thực hiện xoá.'));
     }
   };
 
