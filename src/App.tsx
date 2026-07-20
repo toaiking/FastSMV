@@ -8,7 +8,7 @@ import HistoryTab from './components/HistoryTab';
 import BackupRestoreTab from './components/BackupRestoreTab';
 import { defaultLibrary } from './defaultCoefficients';
 import { 
-  Calculator, ListChecks, BookOpen, History, Shirt, Wifi, AlertTriangle, Loader2, Home, Sun, Moon, Sparkles, Database 
+  Calculator, ListChecks, BookOpen, History, Shirt, Wifi, AlertTriangle, Loader2, Home, Sun, Moon, Sparkles, Database, Download 
 } from 'lucide-react';
 
 export default function App() {
@@ -18,6 +18,10 @@ export default function App() {
   const [isDark, setIsDark] = useState<boolean>(() => {
     return localStorage.getItem('smv_dark_mode') === 'true';
   });
+
+  // PWA Install State
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [showInstallBtn, setShowInstallBtn] = useState<boolean>(false);
 
   // Data States
   const [library, setLibrary] = useState<CoefficientLibrary | null>(null);
@@ -31,6 +35,38 @@ export default function App() {
   // UI status
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // PWA Install Prompt Handler
+  useEffect(() => {
+    const handleBeforeInstall = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setShowInstallBtn(true);
+    };
+
+    const handleAppInstalled = () => {
+      console.log('App was successfully installed');
+      setShowInstallBtn(false);
+      setDeferredPrompt(null);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+    window.addEventListener('appinstalled', handleAppInstalled);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log(`Install choice: ${outcome}`);
+    setDeferredPrompt(null);
+    setShowInstallBtn(false);
+  };
 
   // Apply dark mode theme class to HTML/Body or save it
   useEffect(() => {
@@ -259,6 +295,19 @@ export default function App() {
             >
               {isDark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
             </button>
+
+            {/* Install PWA Button */}
+            {showInstallBtn && (
+              <button
+                type="button"
+                onClick={handleInstallClick}
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-blue-500/30 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold cursor-pointer transition-all"
+                title="Cài đặt ứng dụng về máy"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline text-[10px]">Tải App</span>
+              </button>
+            )}
           </div>
         </div>
       </header>

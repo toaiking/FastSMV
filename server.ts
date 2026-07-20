@@ -21,12 +21,62 @@ const COEFFICIENTS_FILE = path.join(DATA_DIR, 'coefficients.json');
 const STYLES_FILE = path.join(DATA_DIR, 'styles.json');
 const HISTORY_FILE = path.join(DATA_DIR, 'history.json');
 
+// Helper to download an image following redirects with user-agent headers
+function downloadImage(urlStr: string, destPath: string, callback?: (err?: Error) => void) {
+  try {
+    const urlObj = new URL(urlStr);
+    const options = {
+      hostname: urlObj.hostname,
+      path: urlObj.pathname + urlObj.search,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36',
+        'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8'
+      }
+    };
+    https.get(options, (res) => {
+      if (res.statusCode && res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+        const redirectUrl = res.headers.location.startsWith('http') 
+          ? res.headers.location 
+          : `${urlObj.protocol}//${urlObj.host}${res.headers.location}`;
+        downloadImage(redirectUrl, destPath, callback);
+        return;
+      }
+      if (res.statusCode !== 200) {
+        if (callback) callback(new Error(`Failed to get '${urlStr}' (status: ${res.statusCode})`));
+        return;
+      }
+      const fileStream = fs.createWriteStream(destPath);
+      res.pipe(fileStream);
+      fileStream.on('finish', () => {
+        fileStream.close();
+        if (callback) callback();
+      });
+    }).on('error', (err) => {
+      if (callback) callback(err);
+    });
+  } catch (err: any) {
+    if (callback) callback(err);
+  }
+}
+
 // Ensure database directories and initial files exist on startup
 function initializeDatabase() {
   try {
     if (!fs.existsSync(DATA_DIR)) {
       fs.mkdirSync(DATA_DIR, { recursive: true });
       console.log(`Created directory: ${DATA_DIR}`);
+    }
+
+    const localLogoPath = path.join(DATA_DIR, 'logo.jpg');
+    if (!fs.existsSync(localLogoPath)) {
+      console.log('Downloading brand logo on startup...');
+      downloadImage('https://i.postimg.cc/Hk5M8zDP/SMVLOGO.jpg', localLogoPath, (err) => {
+        if (err) {
+          console.error('Failed to download brand logo on startup:', err);
+        } else {
+          console.log('Brand logo downloaded and cached successfully!');
+        }
+      });
     }
 
     if (!fs.existsSync(BACKUPS_DIR)) {
@@ -81,14 +131,49 @@ app.use(express.json());
 
 // Proxy routes for the brand logo & favicon & PWA icons
 app.get(['/logo.jpg', '/favicon.ico', '/icon-192.png', '/icon-512.png'], (req, res) => {
-  https.get('https://i.postimg.cc/Hk5M8zDP/SMVLOGO.jpg', (proxyRes) => {
+  const localLogoPath = path.join(DATA_DIR, 'logo.jpg');
+  if (fs.existsSync(localLogoPath)) {
     res.setHeader('content-type', 'image/jpeg');
     res.setHeader('cache-control', 'public, max-age=86400');
-    proxyRes.pipe(res);
-  }).on('error', (err) => {
-    console.error('Error loading brand logo image:', err);
-    res.status(500).send('Error loading logo');
-  });
+    fs.createReadStream(localLogoPath).pipe(res);
+  } else {
+    // Attempt download on the fly
+    downloadImage('https://i.postimg.cc/Hk5M8zDP/SMVLOGO.jpg', localLogoPath, (err) => {
+      if (!err && fs.existsSync(localLogoPath)) {
+        res.setHeader('content-type', 'image/jpeg');
+        res.setHeader('cache-control', 'public, max-age=86400');
+        fs.createReadStream(localLogoPath).pipe(res);
+      } else {
+        // Fallback SVG icon
+        res.setHeader('content-type', 'image/svg+xml');
+        res.send(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+          <rect width="100" height="100" rx="22" fill="#2563eb"/>
+          <text x="50" y="58" font-family="system-ui, -apple-system, BlinkMacSystemFont, sans-serif" font-size="28" font-weight="900" fill="white" text-anchor="middle" letter-spacing="-1">SMV</text>
+        </svg>`);
+      }
+    });
+  }
+});
+
+// Explicit routes for PWA files
+app.get('/manifest.json', (req, res) => {
+  const p = path.join(process.cwd(), 'public', 'manifest.json');
+  if (fs.existsSync(p)) {
+    res.setHeader('content-type', 'application/json');
+    res.sendFile(p);
+  } else {
+    res.status(404).end();
+  }
+});
+
+app.get('/sw.js', (req, res) => {
+  const p = path.join(process.cwd(), 'public', 'sw.js');
+  if (fs.existsSync(p)) {
+    res.setHeader('content-type', 'application/javascript');
+    res.sendFile(p);
+  } else {
+    res.status(404).end();
+  }
 });
 
 // Helpers to read/write JSON files safely
