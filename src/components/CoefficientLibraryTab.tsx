@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CoefficientLibrary, Coefficient, PartTier, CoefficientCategory, CoefficientHistory } from '../types';
+import { CoefficientLibrary, Coefficient, PerimeterTier, CoefficientCategory, CoefficientHistory } from '../types';
 import { 
   Plus, Trash2, Save, Undo, Archive, CheckCircle, AlertCircle, FileJson, ArrowDownToLine, RefreshCw, Layers, Upload
 } from 'lucide-react';
@@ -25,7 +25,7 @@ export default function CoefficientLibraryTab({
 }: CoefficientLibraryTabProps) {
   // Local editable copy of the library
   const [localCoefficients, setLocalCoefficients] = useState<Coefficient[]>([]);
-  const [localPartTiers, setLocalPartTiers] = useState<PartTier[]>([]);
+  const [localPerimeterTiers, setLocalPerimeterTiers] = useState<PerimeterTier[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
 
   // Sub-tabs: 4 categories + part tiers + backups
@@ -47,7 +47,7 @@ export default function CoefficientLibraryTab({
   // Load from props
   useEffect(() => {
     setLocalCoefficients(JSON.parse(JSON.stringify(library.coefficients)));
-    setLocalPartTiers(JSON.parse(JSON.stringify(library.partTiers)));
+    setLocalPerimeterTiers(JSON.parse(JSON.stringify(library.perimeterTiers || [])));
     setHasChanges(false);
   }, [library]);
 
@@ -79,7 +79,7 @@ export default function CoefficientLibraryTab({
   const handleDiscardChanges = () => {
     if (confirm('Bạn có chắc chắn muốn hủy bỏ toàn bộ chỉnh sửa chưa lưu?')) {
       setLocalCoefficients(JSON.parse(JSON.stringify(library.coefficients)));
-      setLocalPartTiers(JSON.parse(JSON.stringify(library.partTiers)));
+      setLocalPerimeterTiers(JSON.parse(JSON.stringify(library.perimeterTiers || [])));
       setHasChanges(false);
     }
   };
@@ -118,16 +118,20 @@ export default function CoefficientLibraryTab({
     }
   };
 
-  // PART TIERS: Edit a field
-  const handleEditPartTier = (id: string, field: keyof PartTier, value: any) => {
-    setLocalPartTiers(prev => 
+  // PERIMETER TIERS: Edit a field
+  const handleEditPerimeterTier = (id: string, field: keyof PerimeterTier, value: any) => {
+    setLocalPerimeterTiers(prev => 
       prev.map(t => {
         if (t.id === id) {
           markChanged();
           // parse numbers properly
           let parsedValue = value;
-          if (field === 'minParts' || field === 'maxParts' || field === 'multiplier') {
-            parsedValue = parseFloat(value) || 0;
+          if (field === 'minCm' || field === 'maxCm' || field === 'multiplier') {
+            if (value === '' || value === null) {
+              parsedValue = null;
+            } else {
+              parsedValue = parseFloat(value) || 0;
+            }
           }
           return { ...t, [field]: parsedValue };
         }
@@ -136,28 +140,28 @@ export default function CoefficientLibraryTab({
     );
   };
 
-  // PART TIERS: Add a tier
-  const handleAddPartTier = () => {
-    const nextMin = localPartTiers.length > 0 
-      ? Math.max(...localPartTiers.map(t => t.maxParts)) + 1 
+  // PERIMETER TIERS: Add a tier
+  const handleAddPerimeterTier = () => {
+    const nextMin = localPerimeterTiers.length > 0 
+      ? Math.max(...localPerimeterTiers.map(t => t.maxCm === null ? 0 : t.maxCm)) + 1 
       : 1;
 
-    const newTier: PartTier = {
+    const newTier: PerimeterTier = {
       id: `tier-${Date.now()}`,
-      minParts: isFinite(nextMin) ? nextMin : 21,
-      maxParts: 9999,
+      minCm: isFinite(nextMin) && nextMin > 1 ? nextMin : 4501,
+      maxCm: null,
       multiplier: 1.0,
-      description: `Bậc số lượng chi tiết (${isFinite(nextMin) ? nextMin : 21} trở lên)`
+      description: `Bậc chu vi rập (${isFinite(nextMin) && nextMin > 1 ? nextMin : 4501} cm trở lên)`
     };
 
-    setLocalPartTiers(prev => [...prev, newTier]);
+    setLocalPerimeterTiers(prev => [...prev, newTier]);
     markChanged();
   };
 
-  // PART TIERS: Delete a tier
-  const handleDeletePartTier = (id: string) => {
-    if (confirm('Xóa bậc chi tiết này?')) {
-      setLocalPartTiers(prev => prev.filter(t => t.id !== id));
+  // PERIMETER TIERS: Delete a tier
+  const handleDeletePerimeterTier = (id: string) => {
+    if (confirm('Xóa bậc chu vi rập này?')) {
+      setLocalPerimeterTiers(prev => prev.filter(t => t.id !== id));
       markChanged();
     }
   };
@@ -178,7 +182,7 @@ export default function CoefficientLibraryTab({
     }
 
     setChangeDescription(`Cập nhật thư viện hệ số: điều chỉnh các thông số trong tab ${
-      subTab === 'tiers' ? 'Bậc chi tiết' : 'Hệ số nhóm'
+      subTab === 'tiers' ? 'Bậc chu vi rập' : 'Hệ số nhóm'
     }`);
     setSaveError('');
     setSaveSuccess('');
@@ -201,7 +205,7 @@ export default function CoefficientLibraryTab({
           version: nextVersion,
           updatedAt: new Date().toISOString(),
           coefficients: localCoefficients,
-          partTiers: localPartTiers
+          perimeterTiers: localPerimeterTiers
         };
 
         localStorage.setItem('smv_coefficients', JSON.stringify(updatedLibrary));
@@ -243,7 +247,7 @@ export default function CoefficientLibraryTab({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           coefficients: localCoefficients,
-          partTiers: localPartTiers,
+          perimeterTiers: localPerimeterTiers,
           changeDescription: changeDescription.trim()
         })
       });
@@ -321,7 +325,7 @@ export default function CoefficientLibraryTab({
         const content = e.target?.result as string;
         const parsed = JSON.parse(content) as CoefficientLibrary;
 
-        if (!parsed.version || !parsed.coefficients || !parsed.partTiers) {
+        if (!parsed.version || !parsed.coefficients || !parsed.perimeterTiers) {
           throw new Error('Định dạng file sao lưu không hợp lệ. Phải chứa đầy đủ phiên bản và hằng số.');
         }
 
@@ -581,17 +585,17 @@ export default function CoefficientLibraryTab({
         </div>
       )}
 
-      {/* SUBTAB: Part Tiers */}
+      {/* SUBTAB: Perimeter Tiers */}
       {subTab === 'tiers' && (
         <div className="flex flex-col gap-4">
           <div className="flex justify-between items-center">
             <span className="text-xs text-gray-400 flex items-center gap-1">
               <Layers className="w-4 h-4 text-gray-400" />
-              Tách hệ số theo số lượng chi tiết Pattern.
+              Tách hệ số theo tổng chu vi rập mẫu (cm).
             </span>
             <button
               type="button"
-              onClick={handleAddPartTier}
+              onClick={handleAddPerimeterTier}
               className="px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-xs font-bold flex items-center gap-1 cursor-pointer transition-all active:scale-95"
             >
               <Plus className="w-4 h-4" /> Thêm bậc rập
@@ -602,22 +606,22 @@ export default function CoefficientLibraryTab({
             <table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className={`border-b text-gray-400 font-mono ${isDark ? 'bg-slate-900/60 border-slate-700/60' : 'bg-gray-50 border-gray-150'}`}>
-                  <th className="p-3 w-1/4">Số chi tiết từ (Min)</th>
-                  <th className="p-3 w-1/4">Số chi tiết đến (Max)</th>
+                  <th className="p-3 w-1/4">Chu vi từ (cm) (Min)</th>
+                  <th className="p-3 w-1/4">Chu vi đến (cm) (Max)</th>
                   <th className="p-3 w-1/5 text-right">Hệ số nhân</th>
                   <th className="p-3">Mô tả / Diễn giải</th>
                   <th className="p-3 text-center w-16">Xoá</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100/20 font-mono">
-                {localPartTiers.map(tier => (
+                {localPerimeterTiers.map(tier => (
                   <tr key={tier.id} className="hover:bg-slate-50/10">
                     <td className="p-2.5">
                       <input
                         type="number"
                         min="0"
-                        value={tier.minParts}
-                        onChange={e => handleEditPartTier(tier.id, 'minParts', e.target.value)}
+                        value={tier.minCm}
+                        onChange={e => handleEditPerimeterTier(tier.id, 'minCm', e.target.value)}
                         className={`w-full px-2 py-1.5 rounded-lg border text-center font-bold text-gray-700 ${
                           isDark ? 'bg-slate-700 border-slate-600 text-slate-100' : 'bg-white border-gray-300'
                         }`}
@@ -627,8 +631,9 @@ export default function CoefficientLibraryTab({
                       <input
                         type="number"
                         min="0"
-                        value={tier.maxParts}
-                        onChange={e => handleEditPartTier(tier.id, 'maxParts', e.target.value)}
+                        placeholder="Vô hạn"
+                        value={tier.maxCm === null ? '' : tier.maxCm}
+                        onChange={e => handleEditPerimeterTier(tier.id, 'maxCm', e.target.value === '' ? null : e.target.value)}
                         className={`w-full px-2 py-1.5 rounded-lg border text-center font-bold text-gray-700 ${
                           isDark ? 'bg-slate-700 border-slate-600 text-slate-100' : 'bg-white border-gray-300'
                         }`}
@@ -641,7 +646,7 @@ export default function CoefficientLibraryTab({
                           step="0.01"
                           min="0.1"
                           value={tier.multiplier}
-                          onChange={e => handleEditPartTier(tier.id, 'multiplier', e.target.value)}
+                          onChange={e => handleEditPerimeterTier(tier.id, 'multiplier', e.target.value)}
                           className={`w-full pl-2 pr-6 py-1.5 rounded-lg border text-right font-bold text-blue-500 ${
                             isDark ? 'bg-slate-700 border-slate-600' : 'bg-white border-gray-300'
                           }`}
@@ -655,17 +660,17 @@ export default function CoefficientLibraryTab({
                       <input
                         type="text"
                         value={tier.description}
-                        onChange={e => handleEditPartTier(tier.id, 'description', e.target.value)}
+                        onChange={e => handleEditPerimeterTier(tier.id, 'description', e.target.value)}
                         className={`w-full px-2 py-1.5 rounded-lg border text-xs ${
                           isDark ? 'bg-slate-700/60 border-slate-600/60 text-slate-300' : 'bg-white border-gray-200 text-gray-500'
                         }`}
-                        placeholder="VD: Rất nhiều chi tiết..."
+                        placeholder="VD: Rập siêu nhỏ..."
                       />
                     </td>
                     <td className="p-2.5 text-center">
                       <button
                         type="button"
-                        onClick={() => handleDeletePartTier(tier.id)}
+                        onClick={() => handleDeletePerimeterTier(tier.id)}
                         className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-500/10 rounded-lg transition-colors cursor-pointer"
                       >
                         <Trash2 className="w-4 h-4 mx-auto" />

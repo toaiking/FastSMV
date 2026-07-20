@@ -133,7 +133,7 @@ export default function App() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             coefficients: data.library.coefficients,
-            partTiers: data.library.partTiers,
+            perimeterTiers: data.library.perimeterTiers,
             changeDescription: 'Nạp/Khôi phục toàn bộ hệ thống từ tệp tin backup (.json)'
           })
         });

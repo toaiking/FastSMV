@@ -24,13 +24,13 @@ export function exportAllStylesToExcel(styles: Style[]) {
     'Mã hàng',
     'Tên Style',
     'Khách hàng',
-    'Số chi tiết',
+    'Tổng chu vi rập (cm)',
     'Phương thức Base SMV',
-    'Định mức phút/chi tiết',
+    'Định mức phút/cm',
     'Base SMV (phút)',
     'Hệ số Loại sản phẩm',
     'Hệ số Độ phức tạp',
-    'Hệ số Bậc chi tiết',
+    'Hệ số Bậc chu vi rập',
     'Hệ số Kinh nghiệm',
     'Hệ số Bù hao (Allowance %)',
     'SMV Cuối cùng (phút)',
@@ -45,13 +45,13 @@ export function exportAllStylesToExcel(styles: Style[]) {
       style.styleCode,
       style.styleName,
       style.customer,
-      style.partsCount,
+      style.patternPerimeterCm,
       style.baseSmvMethod === 'auto' ? 'Tính tự động' : 'Nhập thủ công',
-      style.baseSmvMethod === 'auto' ? style.partsSmvRate : '-',
+      style.baseSmvMethod === 'auto' ? style.perimeterSmvRate : '-',
       style.baseSmv,
       `${calc.productTypeName} (${calc.productTypeVal})`,
       `${calc.complexityName} (${calc.complexityVal})`,
-      `${calc.partTierName} (${calc.partTierVal})`,
+      `${calc.perimeterTierName} (${calc.perimeterFactor})`,
       `${calc.experienceName} (${calc.experienceVal})`,
       `${calc.allowanceName} (${(calc.allowanceVal * 100).toFixed(0)}%)`,
       calc.finalSmv,
@@ -68,13 +68,13 @@ export function exportAllStylesToExcel(styles: Style[]) {
     { wch: 15 }, // Mã hàng
     { wch: 25 }, // Tên Style
     { wch: 20 }, // Khách hàng
-    { wch: 12 }, // Số chi tiết
+    { wch: 20 }, // Tổng chu vi rập (cm)
     { wch: 22 }, // Phương thức Base
     { wch: 22 }, // Định mức
     { wch: 15 }, // Base SMV
     { wch: 25 }, // Loại SP
     { wch: 25 }, // Độ phức tạp
-    { wch: 25 }, // Bậc chi tiết
+    { wch: 25 }, // Bậc chu vi rập
     { wch: 25 }, // Kinh nghiệm
     { wch: 25 }, // Bù hao
     { wch: 20 }, // SMV Cuối cùng
@@ -102,16 +102,16 @@ export function exportSingleStyleToExcel(style: Style) {
     ['I. THÔNG TIN CHUNG SẢN PHẨM'],
     ['Mã hàng (Style Code):', style.styleCode, '', 'Tên sản phẩm (Style Name):', style.styleName],
     ['Khách hàng (Customer):', style.customer, '', 'Người ước lượng:', style.estimator],
-    ['Ngày ước lượng:', formatDate(style.createdAt), '', 'Số lượng chi tiết:', style.partsCount],
+    ['Ngày ước lượng:', formatDate(style.createdAt), '', 'Tổng chu vi rập (cm):', style.patternPerimeterCm],
     ['Ghi chú:', style.notes || 'Không có ghi chú'],
     [],
     ['II. DIỄN GIẢI CÔNG THỨC & HỆ SỐ ÁP DỤNG'],
-    ['Công thức:', 'SMV Cuối cùng = Base SMV x Hệ số Sản Phẩm x Hệ số Độ Phức Tạp x Hệ số Bậc Chi Tiết x Hệ số Kinh Nghiệm x (1 + % Allowance)'],
+    ['Công thức:', 'SMV Cuối cùng = Base SMV x Hệ số Sản Phẩm x Hệ số Độ Phức Tạp x Hệ số Bậc Chu Vi Rập x Hệ số Kinh Nghiệm x (1 + % Allowance)'],
     [],
     ['Hạng mục yếu tố', 'Tên hệ số đã chọn', 'Giá trị áp dụng', 'Diễn giải ý nghĩa'],
     [
       '1. Base SMV (Thời gian nền)',
-      style.baseSmvMethod === 'auto' ? `Tự động (Số chi tiết x ${style.partsSmvRate} phút)` : 'Nhập thủ công theo kinh nghiệm',
+      style.baseSmvMethod === 'auto' ? `Tự động (Chu vi rập x ${style.perimeterSmvRate} phút/cm)` : 'Nhập thủ công theo kinh nghiệm',
       style.baseSmv,
       'Thời gian sản xuất cơ sở trước khi nhân các hệ số hiệu chỉnh'
     ],
@@ -128,10 +128,10 @@ export function exportSingleStyleToExcel(style: Style) {
       'Hệ số phản ánh độ khó đường may, ráp nối của hàng'
     ],
     [
-      '4. Bậc số lượng chi tiết (Part Count)',
-      calc.partTierName,
-      calc.partTierVal,
-      'Hệ số tỷ lệ thuận theo độ phân rã chi tiết của mẫu rập'
+      '4. Bậc chu vi rập (Perimeter Tier)',
+      calc.perimeterTierName,
+      calc.perimeterFactor,
+      'Hệ số tỷ lệ thuận theo tổng chiều dài chu vi các chi tiết rập'
     ],
     [
       '5. Kinh nghiệm may (Experience)',

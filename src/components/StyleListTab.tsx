@@ -304,7 +304,7 @@ export default function StyleListTab({
                       <div className="bg-slate-900 text-white p-2.5 rounded-md font-mono text-[10px] leading-relaxed overflow-x-auto">
                         <div className="text-blue-400 font-bold mb-0.5">SMV = Base_SMV × f_Loại × f_Khó × f_Bậc × f_Nghề × (1 + Allowance)</div>
                         <div className="border-t border-slate-800/80 mt-1 pt-1 text-slate-300">
-                          = {style.baseSmv} × {calc?.productTypeVal} × {calc?.complexityVal} × {calc?.partTierVal} × {calc?.experienceVal} × {(1 + (calc?.allowanceVal || 0)).toFixed(2)}
+                          = {style.baseSmv} × {calc?.productTypeVal} × {calc?.complexityVal} × {calc?.perimeterFactor} × {calc?.experienceVal} × {(1 + (calc?.allowanceVal || 0)).toFixed(2)}
                           <div className="text-emerald-400 font-bold mt-0.5">= {finalSmv.toFixed(3)} phút</div>
                         </div>
                       </div>
@@ -314,7 +314,7 @@ export default function StyleListTab({
                     <div className="space-y-1 text-gray-600 font-semibold text-[11px]">
                       <div className="flex justify-between border-b border-gray-200/50 pb-1">
                         <span>Thời gian nền:</span>
-                        <span className="text-gray-900 font-mono">{style.baseSmv.toFixed(2)} phút ({style.partsCount} chi tiết)</span>
+                        <span className="text-gray-900 font-mono">{style.baseSmv.toFixed(2)} phút ({style.patternPerimeterCm} cm)</span>
                       </div>
                       <div className="flex justify-between border-b border-gray-200/50 pb-1">
                         <span>👕 Hệ số sản phẩm:</span>
@@ -325,8 +325,8 @@ export default function StyleListTab({
                         <span className="text-gray-900">{calc?.complexityName} (x{calc?.complexityVal.toFixed(2)})</span>
                       </div>
                       <div className="flex justify-between border-b border-gray-200/50 pb-1">
-                        <span>🔢 Hệ số bậc rập:</span>
-                        <span className="text-gray-900">{calc?.partTierName} (x{calc?.partTierVal.toFixed(2)})</span>
+                        <span>📏 Hệ số bậc chu vi rập:</span>
+                        <span className="text-gray-900">{calc?.perimeterTierName} (x{calc?.perimeterFactor.toFixed(2)})</span>
                       </div>
                       <div className="flex justify-between border-b border-gray-200/50 pb-1">
                         <span>👤 Hệ số tay nghề:</span>
@@ -394,7 +394,7 @@ export default function StyleListTab({
                     </div>
                   </th>
                   <th className="py-3.5 px-4">Khách hàng</th>
-                  <th className="py-3.5 px-4 text-center">Số chi tiết</th>
+                  <th className="py-3.5 px-4 text-center">Chu vi rập (cm)</th>
                   <th className="py-3.5 px-4 text-right">Base SMV</th>
                   <th className="py-3.5 px-4 text-right cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => handleSort('finalSmv')}>
                     <div className="flex items-center gap-1 justify-end">
@@ -427,7 +427,7 @@ export default function StyleListTab({
                           {style.customer || '-'}
                         </td>
                         <td className="py-4 px-4 text-center font-semibold text-gray-800">
-                          {style.partsCount}
+                          {style.patternPerimeterCm}
                         </td>
                         <td className="py-4 px-4 text-right font-mono text-gray-500">
                           {style.baseSmv.toFixed(2)}
@@ -536,7 +536,7 @@ export default function StyleListTab({
                                     <span>= <strong className="text-white font-bold">{style.baseSmv}</strong></span>
                                     <span>× <strong className="text-yellow-400 font-bold">{calc?.productTypeVal}</strong></span>
                                     <span>× <strong className="text-yellow-400 font-bold">{calc?.complexityVal}</strong></span>
-                                    <span>× <strong className="text-yellow-400 font-bold">{calc?.partTierVal}</strong></span>
+                                    <span>× <strong className="text-yellow-400 font-bold">{calc?.perimeterFactor}</strong></span>
                                     <span>× <strong className="text-yellow-400 font-bold">{calc?.experienceVal}</strong></span>
                                     <span>× <strong className="text-yellow-400 font-bold">{(1 + (calc?.allowanceVal || 0)).toFixed(2)}</strong></span>
                                     <span className="text-emerald-400 font-bold font-sans ml-1">= {finalSmv.toFixed(3)} phút</span>
@@ -557,8 +557,8 @@ export default function StyleListTab({
                                     <span className="font-bold text-blue-600 mt-1 font-mono block text-sm">Hệ số: {calc?.complexityVal.toFixed(2)}</span>
                                   </div>
                                   <div className="p-3 bg-gray-50 rounded-xl border border-gray-150">
-                                    <span className="text-gray-400 font-semibold block">🔢 Bậc số lượng chi tiết</span>
-                                    <span className="font-bold text-blue-600 mt-1 font-mono block text-sm">Hệ số: {calc?.partTierVal.toFixed(2)}</span>
+                                    <span className="text-gray-400 font-semibold block">📏 Bậc chu vi rập (cm)</span>
+                                    <span className="font-bold text-blue-600 mt-1 font-mono block text-sm">Hệ số: {calc?.perimeterFactor.toFixed(2)}</span>
                                   </div>
                                   <div className="p-3 bg-gray-50 rounded-xl border border-gray-150">
                                     <span className="text-gray-400 font-semibold block">👤 Kinh nghiệm may</span>

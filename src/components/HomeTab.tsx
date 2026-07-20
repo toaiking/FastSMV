@@ -153,7 +153,7 @@ export default function HomeTab({
           <div>
             <h3 className={`font-bold text-xs ${isDark ? 'text-white' : 'text-gray-900'}`}>Thư viện Hệ số định biên</h3>
             <p className="text-[11px] text-gray-400 mt-0.5 leading-relaxed">
-              Cấu hình định mức nền, hệ số loại sản phẩm, độ phức tạp và phân bậc số chi tiết rập mẫu.
+              Cấu hình định mức nền, hệ số loại sản phẩm, độ phức tạp và phân bậc tổng chu vi rập mẫu.
             </p>
           </div>
         </button>
@@ -266,7 +266,7 @@ export default function HomeTab({
         <div className="text-[11px] leading-relaxed">
           <strong className={isDark ? 'text-amber-400' : 'text-amber-800'}>Mẹo IE:</strong>
           <span className={isDark ? 'text-slate-300' : 'text-amber-900/80'}>
-            {" "}Số lượng chi tiết rập Pattern ảnh hưởng trực tiếp đến thời gian may nền. Luôn rà soát kỹ rập mẫu trước khi tính để độ lệch đạt mức tối ưu.
+            {" "}Tổng chu vi rập mẫu ảnh hưởng trực tiếp đến thời gian may nền. Luôn đo chính xác tổng chu vi tất cả chi tiết rập mẫu trước khi ước lượng.
           </span>
         </div>
       </div>

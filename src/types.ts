@@ -14,10 +14,10 @@ export interface Coefficient {
   isDefault?: boolean;
 }
 
-export interface PartTier {
+export interface PerimeterTier {
   id: string;
-  minParts: number;
-  maxParts: number; // Use Infinity or a large number for upper bound
+  minCm: number;
+  maxCm: number | null; // Use null or Infinity for upper bound
   multiplier: number;
   description: string;
 }
@@ -26,7 +26,7 @@ export interface CoefficientLibrary {
   version: number;
   updatedAt: string;
   coefficients: Coefficient[];
-  partTiers: PartTier[];
+  perimeterTiers: PerimeterTier[];
 }
 
 export interface CoefficientHistory {
@@ -45,8 +45,8 @@ export interface SMVCalculationDetails {
   productTypeName: string;
   complexityVal: number;
   complexityName: string;
-  partTierVal: number;
-  partTierName: string;
+  perimeterFactor: number;
+  perimeterTierName: string;
   experienceVal: number;
   experienceName: string;
   allowanceVal: number; // e.g., 0.10 for 10%
@@ -59,9 +59,9 @@ export interface Style {
   styleCode: string; // Mã hàng
   styleName: string; // Tên Style
   customer: string; // Khách hàng
-  partsCount: number; // Số chi tiết
+  patternPerimeterCm: number; // Tổng chu vi rập (cm)
   baseSmvMethod: 'manual' | 'auto';
-  partsSmvRate: number; // Phút/chi tiết (mặc định 0.35 nếu auto)
+  perimeterSmvRate: number; // Phút/cm (mặc định 0.005 nếu auto)
   baseSmv: number; // Base SMV (nhập tay hoặc tính tự động)
   productTypeId: string; // ID hệ số loại sản phẩm
   complexityId: string; // ID hệ số độ phức tạp

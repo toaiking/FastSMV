@@ -33,7 +33,18 @@ function initializeDatabase() {
       console.log(`Created directory: ${BACKUPS_DIR}`);
     }
 
-    if (!fs.existsSync(COEFFICIENTS_FILE)) {
+    if (fs.existsSync(COEFFICIENTS_FILE)) {
+      try {
+        const current = JSON.parse(fs.readFileSync(COEFFICIENTS_FILE, 'utf-8'));
+        if (!current.perimeterTiers || current.partTiers) {
+          console.log(`Old coefficients file detected. Overwriting with new perimeter-based defaultLibrary.`);
+          fs.writeFileSync(COEFFICIENTS_FILE, JSON.stringify(defaultLibrary, null, 2), 'utf-8');
+        }
+      } catch (err) {
+        console.warn('Error checking old coefficients file, resetting to default:', err);
+        fs.writeFileSync(COEFFICIENTS_FILE, JSON.stringify(defaultLibrary, null, 2), 'utf-8');
+      }
+    } else {
       fs.writeFileSync(COEFFICIENTS_FILE, JSON.stringify(defaultLibrary, null, 2), 'utf-8');
       console.log(`Initialized coefficients with default library`);
     }
@@ -100,10 +111,10 @@ app.get('/api/coefficients', (req, res) => {
 
 // POST: Update Coefficients Library (increases version & records history)
 app.post('/api/coefficients', (req, res) => {
-  const { coefficients, partTiers, changeDescription } = req.body;
+  const { coefficients, perimeterTiers, changeDescription } = req.body;
 
-  if (!coefficients || !partTiers) {
-    res.status(400).json({ error: 'Missing coefficients or partTiers data' });
+  if (!coefficients || !perimeterTiers) {
+    res.status(400).json({ error: 'Missing coefficients or perimeterTiers data' });
     return;
   }
 
@@ -115,7 +126,7 @@ app.post('/api/coefficients', (req, res) => {
     version: newVersion,
     updatedAt: new Date().toISOString(),
     coefficients,
-    partTiers
+    perimeterTiers
   };
 
   const success = writeJSONFile(COEFFICIENTS_FILE, updatedLibrary);
@@ -214,7 +225,7 @@ app.post('/api/coefficients/restore', (req, res) => {
     const backupContent = fs.readFileSync(backupFilePath, 'utf-8');
     const parsed = JSON.parse(backupContent) as CoefficientLibrary;
 
-    if (!parsed.version || !parsed.coefficients || !parsed.partTiers) {
+    if (!parsed.version || !parsed.coefficients || !parsed.perimeterTiers) {
       res.status(400).json({ error: 'Invalid backup file format' });
       return;
     }

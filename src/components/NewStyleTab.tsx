@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { CoefficientLibrary, Style, Coefficient, PartTier, SMVCalculationDetails } from '../types';
+import { CoefficientLibrary, Style, Coefficient, PerimeterTier, SMVCalculationDetails } from '../types';
 import { 
   Play, Save, CheckCircle2, RotateCcw, AlertCircle, FileSpreadsheet, Eye,
   Camera, Mic, MicOff, Plus, Minus, RefreshCw, X, Sliders, Check, Upload, Sparkles, HelpCircle, Shirt
@@ -19,30 +19,30 @@ interface NewStyleTabProps {
 const MOCK_PATTERNS = [
   {
     name: 'Áo thun T-Shirt Basic',
-    parts: 6,
+    perimeter: 520,
     productTypeKeyword: 'Áo thun',
-    description: 'Rập gồm: Thân trước (1), Thân sau (1), Tay áo (2), Bo cổ (1), Đắp vai (1).',
+    description: 'Tổng chu vi rập áo thun cơ bản: Thân trước, thân sau, tay áo, bo cổ và vai.',
     image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=500&auto=format&fit=crop&q=60'
   },
   {
     name: 'Sơ mi dài tay (Shirt)',
-    parts: 14,
+    perimeter: 1200,
     productTypeKeyword: 'Sơ mi',
-    description: 'Rập gồm: Thân trước (2), Thân sau (1), Đô sau (1), Tay áo (2), Cổ áo (2), Chân cổ (1), Măng sét (2), Trụ tay (2), Túi ngực (1).',
+    description: 'Tổng chu vi rập sơ mi: Thân trước/sau, đô sau, tay áo, cổ áo, măng sét, túi.',
     image: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=500&auto=format&fit=crop&q=60'
   },
   {
     name: 'Quần Jeans Denim',
-    parts: 12,
+    perimeter: 1800,
     productTypeKeyword: 'Quần jeans',
-    description: 'Rập gồm: Thân trước (2), Thân sau (2), Túi trước (2), Túi sau (2), Túi đồng xu (1), Đai quần (1), Đáp khoá (2).',
+    description: 'Tổng chu vi rập quần jeans: Thân trước/sau, túi trước/sau, đai và đáp khoá.',
     image: 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=500&auto=format&fit=crop&q=60'
   },
   {
     name: 'Áo khoác gió (Jacket)',
-    parts: 18,
+    perimeter: 2800,
     productTypeKeyword: 'Áo khoác',
-    description: 'Rập gồm: Thân trước (2), Thân sau (1), Tay áo (2), Mũ trùm (3), Lót trong (3), Túi sườn (2), Nẹp khoá (1), Bo gấu (2), Bo tay (2).',
+    description: 'Tổng chu vi rập jacket: Thân trước/sau, tay, mũ trùm, lót trong, túi sườn.',
     image: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=500&auto=format&fit=crop&q=60'
   }
 ];
@@ -59,9 +59,9 @@ export default function NewStyleTab({
   const [styleCode, setStyleCode] = useState('');
   const [styleName, setStyleName] = useState('');
   const [customer, setCustomer] = useState('');
-  const [partsCount, setPartsCount] = useState<number>(10);
+  const [patternPerimeterCm, setPatternPerimeterCm] = useState<number>(500);
   const [baseSmvMethod, setBaseSmvMethod] = useState<'manual' | 'auto'>('auto');
-  const [partsSmvRate, setPartsSmvRate] = useState<number>(0.35);
+  const [perimeterSmvRate, setPerimeterSmvRate] = useState<number>(0.005);
   const [manualBaseSmv, setManualBaseSmv] = useState<number>(3.5);
   const [estimator, setEstimator] = useState('');
   const [notes, setNotes] = useState('');
@@ -109,9 +109,9 @@ export default function NewStyleTab({
       setStyleCode(editingStyle.styleCode);
       setStyleName(editingStyle.styleName);
       setCustomer(editingStyle.customer);
-      setPartsCount(editingStyle.partsCount);
+      setPatternPerimeterCm(editingStyle.patternPerimeterCm);
       setBaseSmvMethod(editingStyle.baseSmvMethod);
-      setPartsSmvRate(editingStyle.partsSmvRate || 0.35);
+      setPerimeterSmvRate(editingStyle.perimeterSmvRate || 0.005);
       if (editingStyle.baseSmvMethod === 'manual') {
         setManualBaseSmv(editingStyle.baseSmv);
       }
@@ -129,9 +129,9 @@ export default function NewStyleTab({
       setStyleCode('');
       setStyleName('');
       setCustomer('');
-      setPartsCount(10);
+      setPatternPerimeterCm(500);
       setBaseSmvMethod('auto');
-      setPartsSmvRate(0.35);
+      setPerimeterSmvRate(0.005);
       setManualBaseSmv(3.5);
       setNotes('');
       setPatternImage('');
@@ -161,7 +161,7 @@ export default function NewStyleTab({
   useEffect(() => {
     // 1. Calculate Base SMV
     const baseSmv = baseSmvMethod === 'auto' 
-      ? Number((partsCount * partsSmvRate).toFixed(3))
+      ? Number((patternPerimeterCm * perimeterSmvRate).toFixed(3))
       : Number(manualBaseSmv);
 
     // 2. Fetch coefficient values
@@ -170,9 +170,12 @@ export default function NewStyleTab({
     const exp = library.coefficients.find(c => c.id === selectedExperienceId) || experiences[0];
     const allow = library.coefficients.find(c => c.id === selectedAllowanceId) || allowances[0];
 
-    // 3. Find Part Tier Multiplier based on parts count
-    const partTier = library.partTiers.find(tier => partsCount >= tier.minParts && partsCount <= tier.maxParts) 
-      || library.partTiers[library.partTiers.length - 1]; // fallback
+    // 3. Find Perimeter Tier Multiplier based on perimeter
+    const perimeterTier = library.perimeterTiers.find(tier => {
+      const min = tier.minCm;
+      const max = tier.maxCm === null ? Infinity : tier.maxCm;
+      return patternPerimeterCm >= min && patternPerimeterCm <= max;
+    }) || library.perimeterTiers[library.perimeterTiers.length - 1]; // fallback
 
     const pTypeVal = prodType ? prodType.value : 1.0;
     const pTypeName = prodType ? prodType.name : 'N/A';
@@ -186,8 +189,8 @@ export default function NewStyleTab({
     const allowVal = allow ? allow.value : 0.0;
     const allowName = allow ? allow.name : 'N/A';
 
-    const tierVal = partTier ? partTier.multiplier : 1.0;
-    const tierName = partTier ? partTier.description : 'Mặc định';
+    const tierVal = perimeterTier ? perimeterTier.multiplier : 1.0;
+    const tierName = perimeterTier ? perimeterTier.description : 'Mặc định';
 
     // 4. Calculate final SMV
     // Formula: Base_SMV * Type * Complexity * Tier * Experience * (1 + Allowance)
@@ -201,8 +204,8 @@ export default function NewStyleTab({
       productTypeName: pTypeName,
       complexityVal: compVal,
       complexityName: compName,
-      partTierVal: tierVal,
-      partTierName: tierName,
+      perimeterFactor: tierVal,
+      perimeterTierName: tierName,
       experienceVal: expVal,
       experienceName: expName,
       allowanceVal: allowVal,
@@ -210,9 +213,9 @@ export default function NewStyleTab({
       finalSmv
     });
   }, [
-    partsCount,
+    patternPerimeterCm,
     baseSmvMethod,
-    partsSmvRate,
+    perimeterSmvRate,
     manualBaseSmv,
     selectedProductTypeId,
     selectedComplexityId,
@@ -320,7 +323,7 @@ export default function NewStyleTab({
 
   // Select Mock Preset Pattern Template
   const handleSelectMockPattern = (mock: typeof MOCK_PATTERNS[number]) => {
-    setPartsCount(mock.parts);
+    setPatternPerimeterCm(mock.perimeter);
     setPatternImage(mock.image);
     setNotes(prev => `[Nhập từ mẫu Pattern Rập] ${mock.name}. ${mock.description}\n` + prev);
     
@@ -348,9 +351,9 @@ export default function NewStyleTab({
       setStyleCode('');
       setStyleName('');
       setCustomer('');
-      setPartsCount(10);
+      setPatternPerimeterCm(500);
       setBaseSmvMethod('auto');
-      setPartsSmvRate(0.35);
+      setPerimeterSmvRate(0.005);
       setManualBaseSmv(3.5);
       setNotes('');
       setPatternImage('');
@@ -387,9 +390,9 @@ export default function NewStyleTab({
       styleCode: styleCode.trim(),
       styleName: styleName.trim(),
       customer: customer.trim(),
-      partsCount,
+      patternPerimeterCm,
       baseSmvMethod,
-      partsSmvRate,
+      perimeterSmvRate,
       baseSmv: activeCalculation.baseSmv,
       productTypeId: selectedProductTypeId,
       complexityId: selectedComplexityId,
@@ -433,7 +436,7 @@ export default function NewStyleTab({
           setStyleCode('');
           setStyleName('');
           setCustomer('');
-          setPartsCount(10);
+          setPatternPerimeterCm(500);
           setNotes('');
           setPatternImage('');
         }
@@ -473,7 +476,7 @@ export default function NewStyleTab({
         setStyleCode('');
         setStyleName('');
         setCustomer('');
-        setPartsCount(10);
+        setPatternPerimeterCm(500);
         setNotes('');
         setPatternImage('');
       }
@@ -499,9 +502,9 @@ export default function NewStyleTab({
       styleCode: styleCode.trim() || 'MA-MAU',
       styleName: styleName.trim() || 'Style Chưa Đặt Tên',
       customer: customer.trim() || 'Khách Hàng Mẫu',
-      partsCount,
+      patternPerimeterCm,
       baseSmvMethod,
-      partsSmvRate,
+      perimeterSmvRate,
       baseSmv: activeCalculation.baseSmv,
       productTypeId: selectedProductTypeId,
       complexityId: selectedComplexityId,
@@ -678,7 +681,7 @@ export default function NewStyleTab({
                     className="p-2 bg-white hover:bg-blue-100 border border-blue-200 rounded-lg text-left transition-all active:scale-97 cursor-pointer"
                   >
                     <span className="text-xs font-bold text-gray-800 block">{mock.name}</span>
-                    <span className="text-[10px] text-blue-700 font-semibold">{mock.parts} chi tiết</span>
+                    <span className="text-[10px] text-blue-700 font-semibold">{mock.perimeter} cm</span>
                   </button>
                 ))}
               </div>
@@ -767,26 +770,26 @@ export default function NewStyleTab({
 
           {/* Numbers Steppers (Finger-friendly for mobile) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Parts Count input */}
+            {/* Pattern Perimeter input */}
             <div>
-              <label className="block text-xs font-semibold text-gray-400 mb-1" htmlFor="parts-count">
-                Số lượng chi tiết từ Pattern
+              <label className="block text-xs font-semibold text-gray-400 mb-1" htmlFor="pattern-perimeter">
+                Tổng chu vi rập mẫu (cm)
               </label>
               <div className="flex items-center gap-1.5">
                 <button
                   type="button"
-                  onClick={() => setPartsCount(prev => Math.max(1, prev - 1))}
+                  onClick={() => setPatternPerimeterCm(prev => Math.max(10, prev - 50))}
                   className="w-11 h-11 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-800 rounded-lg flex items-center justify-center font-black select-none cursor-pointer border border-gray-200 shadow-xs"
                 >
                   <Minus className="w-4 h-4" />
                 </button>
                 <input
-                  id="parts-count"
+                  id="pattern-perimeter"
                   type="number"
-                  min="1"
+                  min="10"
                   required
-                  value={partsCount}
-                  onChange={e => setPartsCount(Math.max(1, parseInt(e.target.value) || 1))}
+                  value={patternPerimeterCm}
+                  onChange={e => setPatternPerimeterCm(Math.max(10, parseFloat(e.target.value) || 10))}
                   className={`flex-1 h-11 text-center font-black text-base rounded-lg transition-all ${
                     isDark 
                       ? 'bg-slate-700 border-slate-600 text-white' 
@@ -795,7 +798,7 @@ export default function NewStyleTab({
                 />
                 <button
                   type="button"
-                  onClick={() => setPartsCount(prev => prev + 1)}
+                  onClick={() => setPatternPerimeterCm(prev => prev + 50)}
                   className="w-11 h-11 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-800 rounded-lg flex items-center justify-center font-black select-none cursor-pointer border border-gray-200 shadow-xs"
                 >
                   <Plus className="w-4 h-4" />
@@ -839,29 +842,29 @@ export default function NewStyleTab({
           <div className="p-3 bg-gray-50/60 rounded-xl border border-gray-200 grid grid-cols-1 sm:grid-cols-2 gap-3">
             {baseSmvMethod === 'auto' ? (
               <div>
-                <label className="block text-xs font-semibold text-gray-500 mb-1" htmlFor="parts-smv-rate">
-                  Định mức nền (phút/chi tiết)
+                <label className="block text-xs font-semibold text-gray-500 mb-1" htmlFor="perimeter-smv-rate">
+                  Định mức nền (phút/cm chu vi)
                 </label>
                 <div className="flex items-center gap-1.5">
                   <button
                     type="button"
-                    onClick={() => setPartsSmvRate(prev => Math.max(0.05, Number((prev - 0.05).toFixed(2))))}
+                    onClick={() => setPerimeterSmvRate(prev => Math.max(0.001, Number((prev - 0.001).toFixed(4))))}
                     className="w-10 h-10 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg flex items-center justify-center font-bold border border-gray-200 cursor-pointer"
                   >
                     <Minus className="w-3.5 h-3.5" />
                   </button>
                   <input
-                    id="parts-smv-rate"
+                    id="perimeter-smv-rate"
                     type="number"
-                    step="0.01"
-                    min="0.05"
-                    value={partsSmvRate}
-                    onChange={e => setPartsSmvRate(Math.max(0.01, parseFloat(e.target.value) || 0))}
+                    step="0.001"
+                    min="0.001"
+                    value={perimeterSmvRate}
+                    onChange={e => setPerimeterSmvRate(Math.max(0.001, parseFloat(e.target.value) || 0))}
                     className="flex-1 h-10 text-center font-bold text-sm bg-white rounded-lg border border-gray-300"
                   />
                   <button
                     type="button"
-                    onClick={() => setPartsSmvRate(prev => Number((prev + 0.05).toFixed(2)))}
+                    onClick={() => setPerimeterSmvRate(prev => Number((prev + 0.001).toFixed(4)))}
                     className="w-10 h-10 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg flex items-center justify-center font-bold border border-gray-200 cursor-pointer"
                   >
                     <Plus className="w-3.5 h-3.5" />
@@ -906,7 +909,7 @@ export default function NewStyleTab({
               <div className="text-center">
                 <span className="text-[10px] text-gray-400 block font-semibold uppercase">Base SMV Tạm Tính</span>
                 <strong className="text-blue-700 text-lg font-black font-sans">
-                  {baseSmvMethod === 'auto' ? (partsCount * partsSmvRate).toFixed(3) : manualBaseSmv.toFixed(3)}
+                  {baseSmvMethod === 'auto' ? (patternPerimeterCm * perimeterSmvRate).toFixed(3) : manualBaseSmv.toFixed(3)}
                 </strong>{' '}
                 <span className="text-blue-600 text-xs font-semibold">phút</span>
               </div>
@@ -1118,12 +1121,12 @@ export default function NewStyleTab({
             <div>
               <h3 className="text-slate-400 text-xs uppercase font-mono mb-2">Công thức tính toán (IE standard)</h3>
               <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-850 text-xs font-mono text-slate-300 overflow-x-auto leading-relaxed">
-                <div className="text-blue-400 font-bold mb-1">SMV = Base_SMV × f_Loại × f_Khó × f_Bậc × f_Nghề × (1 + % Allowance)</div>
+                <div className="text-blue-400 font-bold mb-1">SMV = Base_SMV × f_Loại × f_Khó × f_ChuVi × f_Nghề × (1 + % Allowance)</div>
                 <div className="border-t border-slate-800/80 my-2 pt-2 text-xs flex flex-wrap gap-x-1.5 gap-y-1">
                   <span>= <strong className="text-white font-bold">{activeCalculation.baseSmv}</strong></span>
                   <span>× <strong className="text-yellow-400 font-bold">{activeCalculation.productTypeVal}</strong> (Loại)</span>
                   <span>× <strong className="text-yellow-400 font-bold">{activeCalculation.complexityVal}</strong> (Khó)</span>
-                  <span>× <strong className="text-yellow-400 font-bold">{activeCalculation.partTierVal}</strong> (Bậc)</span>
+                  <span>× <strong className="text-yellow-400 font-bold">{activeCalculation.perimeterFactor}</strong> (Chu vi)</span>
                   <span>× <strong className="text-yellow-400 font-bold">{activeCalculation.experienceVal}</strong> (Nghề)</span>
                   <span>× <strong className="text-yellow-400 font-bold">{(1 + activeCalculation.allowanceVal).toFixed(2)}</strong> (Bù hao)</span>
                 </div>
@@ -1138,7 +1141,7 @@ export default function NewStyleTab({
                 <div className="flex justify-between items-center py-1.5 border-b border-slate-800/60">
                   <div>
                     <span className="text-slate-300 block">Thời gian gốc (Base SMV)</span>
-                    <span className="text-slate-500 text-[10px]">{baseSmvMethod === 'auto' ? `Số chi tiết (${partsCount}) × Định mức (${partsSmvRate})` : 'Nhập tay thủ công'}</span>
+                    <span className="text-slate-500 text-[10px]">{baseSmvMethod === 'auto' ? `Tổng chu vi (${patternPerimeterCm} cm) × Định mức (${perimeterSmvRate})` : 'Nhập tay thủ công'}</span>
                   </div>
                   <strong className="text-white font-mono">{activeCalculation.baseSmv.toFixed(3)}</strong>
                 </div>
@@ -1161,13 +1164,13 @@ export default function NewStyleTab({
                   <strong className="text-yellow-400 font-mono">×{activeCalculation.complexityVal.toFixed(2)}</strong>
                 </div>
 
-                {/* 4. Part Tier count */}
+                {/* 4. Perimeter Tier */}
                 <div className="flex justify-between items-center py-1.5 border-b border-slate-800/60">
                   <div>
-                    <span className="text-slate-300 block">Hệ số bậc chi tiết (Part Tier)</span>
-                    <span className="text-slate-500 text-[10px]">{activeCalculation.partTierName}</span>
+                    <span className="text-slate-300 block">Hệ số bậc chu vi rập (Perimeter Tier)</span>
+                    <span className="text-slate-500 text-[10px]">{activeCalculation.perimeterTierName}</span>
                   </div>
-                  <strong className="text-yellow-400 font-mono">×{activeCalculation.partTierVal.toFixed(2)}</strong>
+                  <strong className="text-yellow-400 font-mono">×{activeCalculation.perimeterFactor.toFixed(2)}</strong>
                 </div>
 
                 {/* 5. Experience */}

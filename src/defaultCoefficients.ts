@@ -34,10 +34,14 @@ export const defaultLibrary: CoefficientLibrary = {
     { id: 'allow-high', category: 'allowance', name: 'Cao (Max)', value: 0.15, description: 'Đơn hàng phức tạp nhiều rủi ro 15%' },
     { id: 'allow-veryhigh', category: 'allowance', name: 'Rất cao (Extreme)', value: 0.20, description: 'Mẫu đầu chuyền, hàng dệt khó 20%' }
   ],
-  partTiers: [
-    { id: 'tier-1', minParts: 1, maxParts: 5, multiplier: 0.9, description: 'Rất ít chi tiết (1-5 chi tiết)' },
-    { id: 'tier-2', minParts: 6, maxParts: 10, multiplier: 1.0, description: 'Số chi tiết vừa phải (6-10 chi tiết)' },
-    { id: 'tier-3', minParts: 11, maxParts: 20, multiplier: 1.15, description: 'Khá nhiều chi tiết (11-20 chi tiết)' },
-    { id: 'tier-4', minParts: 21, maxParts: 9999, multiplier: 1.3, description: 'Rất nhiều chi tiết (>20 chi tiết)' }
+  perimeterTiers: [
+    { id: 'tier-very-small', minCm: 0, maxCm: 600, multiplier: 0.80, description: 'Rất nhỏ (0-600 cm)' },
+    { id: 'tier-small', minCm: 601, maxCm: 1000, multiplier: 0.90, description: 'Nhỏ (601-1000 cm)' },
+    { id: 'tier-medium-low', minCm: 1001, maxCm: 1500, multiplier: 0.97, description: 'Trung bình thấp (1001-1500 cm)' },
+    { id: 'tier-medium', minCm: 1501, maxCm: 2000, multiplier: 1.00, description: 'Trung bình (baseline) (1501-2000 cm)' },
+    { id: 'tier-medium-high', minCm: 2001, maxCm: 2600, multiplier: 1.08, description: 'Trung bình cao (2001-2600 cm)' },
+    { id: 'tier-large', minCm: 2601, maxCm: 3400, multiplier: 1.18, description: 'Lớn (2601-3400 cm)' },
+    { id: 'tier-very-large', minCm: 3401, maxCm: 4500, multiplier: 1.32, description: 'Rất lớn (3401-4500 cm)' },
+    { id: 'tier-extreme', minCm: 4501, maxCm: 999999, multiplier: 1.50, description: 'Cực lớn (>4500 cm)' }
   ]
 };
