@@ -1,0 +1,6 @@
+{
+  "name": "SMV Estimator",
+  "description": "Ứng dụng ước lượng nhanh Sewing Minute Value (SMV) từ thông tin Pattern, chạy offline, dành cho quản lý.",
+  "requestFramePermissions": ["camera", "microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
