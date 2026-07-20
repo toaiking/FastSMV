@@ -214,9 +214,12 @@ export default function App() {
           
           {/* Logo & title */}
           <div className="flex items-center gap-2">
-            <div className="p-1.5 bg-blue-600 text-white rounded-lg shadow-sm flex-shrink-0">
-              <Shirt className="w-4 h-4" />
-            </div>
+            <img 
+              src="/logo.jpg" 
+              alt="Logo" 
+              className="w-7 h-7 rounded-lg object-cover shadow-sm flex-shrink-0 border border-blue-500/30"
+              referrerPolicy="no-referrer"
+            />
             <div>
               <div className="flex items-center gap-1.5">
                 <h1 className="text-sm font-black tracking-tight font-sans">SMV Estimator</h1>

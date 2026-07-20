@@ -6,6 +6,7 @@
 import express from 'express';
 import path from 'path';
 import fs from 'fs';
+import https from 'https';
 import { createServer as createViteServer } from 'vite';
 import { defaultLibrary } from './src/defaultCoefficients';
 import { CoefficientLibrary, Style, CoefficientHistory } from './src/types';
@@ -77,6 +78,18 @@ initializeDatabase();
 
 // Middleware
 app.use(express.json());
+
+// Proxy routes for the brand logo & favicon & PWA icons
+app.get(['/logo.jpg', '/favicon.ico', '/icon-192.png', '/icon-512.png'], (req, res) => {
+  https.get('https://i.postimg.cc/Hk5M8zDP/SMVLOGO.jpg', (proxyRes) => {
+    res.setHeader('content-type', 'image/jpeg');
+    res.setHeader('cache-control', 'public, max-age=86400');
+    proxyRes.pipe(res);
+  }).on('error', (err) => {
+    console.error('Error loading brand logo image:', err);
+    res.status(500).send('Error loading logo');
+  });
+});
 
 // Helpers to read/write JSON files safely
 function readJSONFile<T>(filePath: string, defaultVal: T): T {
