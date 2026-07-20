@@ -5,13 +5,14 @@ import NewStyleTab from './components/NewStyleTab';
 import StyleListTab from './components/StyleListTab';
 import CoefficientLibraryTab from './components/CoefficientLibraryTab';
 import HistoryTab from './components/HistoryTab';
+import BackupRestoreTab from './components/BackupRestoreTab';
 import { defaultLibrary } from './defaultCoefficients';
 import { 
-  Calculator, ListChecks, BookOpen, History, Shirt, Wifi, AlertTriangle, Loader2, Home, Sun, Moon, Sparkles 
+  Calculator, ListChecks, BookOpen, History, Shirt, Wifi, AlertTriangle, Loader2, Home, Sun, Moon, Sparkles, Database 
 } from 'lucide-react';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'home' | 'new_style' | 'styles_list' | 'coefficients' | 'history'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'new_style' | 'styles_list' | 'coefficients' | 'history' | 'backup'>('home');
   
   // Theme State
   const [isDark, setIsDark] = useState<boolean>(() => {
@@ -112,6 +113,35 @@ export default function App() {
   useEffect(() => {
     loadAllData();
   }, []);
+
+  // Full System restore from file
+  const handleSystemRestore = async (data: { library: CoefficientLibrary; styles: Style[]; history: CoefficientHistory[] }) => {
+    setLibrary(data.library);
+    setStyles(data.styles);
+    setHistory(data.history);
+
+    // Persist to local storage
+    localStorage.setItem('smv_coefficients', JSON.stringify(data.library));
+    localStorage.setItem('smv_styles', JSON.stringify(data.styles));
+    localStorage.setItem('smv_history', JSON.stringify(data.history));
+
+    if (!isLocalStorageMode) {
+      try {
+        // Also try to update the server so server-side DB is synced
+        await fetch('/api/coefficients', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            coefficients: data.library.coefficients,
+            partTiers: data.library.partTiers,
+            changeDescription: 'Nạp/Khôi phục toàn bộ hệ thống từ tệp tin backup (.json)'
+          })
+        });
+      } catch (err) {
+        console.warn('Could not sync restored database with server backend', err);
+      }
+    }
+  };
 
   // Delete a Style
   const handleDeleteStyle = async (id: string) => {
@@ -320,6 +350,23 @@ export default function App() {
               <History className="w-3.5 h-3.5" />
               <span>Lịch sử ({history.length})</span>
             </button>
+
+            <button
+              onClick={() => {
+                setActiveTab('backup');
+                setEditingStyle(null);
+              }}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                activeTab === 'backup'
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : isDark 
+                    ? 'text-slate-400 hover:text-white hover:bg-slate-800' 
+                    : 'text-gray-500 hover:text-gray-800 hover:bg-gray-100/70'
+              }`}
+            >
+              <Database className="w-3.5 h-3.5" />
+              <span>Đồng bộ & Sao lưu</span>
+            </button>
           </div>
         </div>
       </nav>
@@ -393,20 +440,20 @@ export default function App() {
           <span className="text-[8px] font-bold">Thư viện</span>
         </button>
 
-        {/* History Tab Button */}
+        {/* Backup/Sync Tab Button */}
         <button
           onClick={() => {
-            setActiveTab('history');
+            setActiveTab('backup');
             setEditingStyle(null);
           }}
           className={`flex flex-col items-center gap-0.5 py-1 px-3 rounded-lg transition-all active:scale-90 cursor-pointer ${
-            activeTab === 'history'
+            activeTab === 'backup'
               ? 'text-blue-500 font-extrabold scale-105'
               : 'text-gray-400 hover:text-gray-600'
           }`}
         >
-          <History className="w-4.5 h-4.5" />
-          <span className="text-[8px] font-bold">Nhật ký</span>
+          <Database className="w-4.5 h-4.5" />
+          <span className="text-[8px] font-bold">Sao lưu</span>
         </button>
       </nav>
 
@@ -475,6 +522,18 @@ export default function App() {
               <HistoryTab
                 history={history}
                 isDark={isDark}
+              />
+            )}
+
+            {activeTab === 'backup' && (
+              <BackupRestoreTab
+                library={library}
+                styles={styles}
+                history={history}
+                onSystemRestore={handleSystemRestore}
+                isDark={isDark}
+                isLocalStorageMode={isLocalStorageMode}
+                onLibraryUpdate={loadAllData}
               />
             )}
           </div>
